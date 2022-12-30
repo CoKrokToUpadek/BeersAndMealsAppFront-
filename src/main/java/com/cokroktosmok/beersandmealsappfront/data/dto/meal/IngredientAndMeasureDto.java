@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class IngredientAndMeasureDto {
     @JsonProperty("IngredientName")
     private String IngredientName;
