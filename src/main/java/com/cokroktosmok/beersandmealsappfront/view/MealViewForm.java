@@ -2,6 +2,8 @@ package com.cokroktosmok.beersandmealsappfront.view;
 
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.IngredientAndMeasureDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
+import com.vaadin.flow.component.ComponentEvent;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -15,7 +17,7 @@ import com.vaadin.flow.data.binder.Binder;
 import java.util.ArrayList;
 
 
-public class MealViewPopUp extends FormLayout {
+public class MealViewForm extends FormLayout {
     private MealDto mealDto;
     TextField name = new TextField("name");
     TextField category = new TextField("category");
@@ -29,9 +31,10 @@ public class MealViewPopUp extends FormLayout {
     Button closeButton = new Button("close");
     private final Grid<IngredientAndMeasureDto> ingredientAndMeasureDtoGrid = new Grid<>(IngredientAndMeasureDto.class);
     Binder<MealDto> binder = new BeanValidationBinder<>(MealDto.class);
-    public MealViewPopUp() {
+    public MealViewForm() {
         instruction.setMaxLength(5000);
         binder.bindInstanceFields(this);
+
         add(name,category,area, instruction,thumbnail,tags,youtubeLink,configureGrid(),source,createButtonsLayout());
     }
 
@@ -55,23 +58,23 @@ public class MealViewPopUp extends FormLayout {
     public void clearIngredientsList(){
         ingredientAndMeasureDtoGrid.setItems(new ArrayList<>());
     }
-//    // Events
-//    public static abstract class MealFormEvent extends ComponentEvent<MealViewPopUp> {
-//        private MealDto mealDto;
-//
-//        protected MealFormEvent(MealViewPopUp source, MealDto contact) {
-//            super(source, false);
-//            this.mealDto = contact;
-//        }
-//
-//        public MealDto getMealDto() {
-//            return mealDto;
-//        }
-//    }
-//
+    // Events
+    public static abstract class MealFormEvent extends ComponentEvent<MealViewForm> {
+        private MealDto mealDto;
+
+        protected MealFormEvent(MealViewForm source, MealDto contact) {
+            super(source, false);
+            this.mealDto = contact;
+        }
+
+        public MealDto getMealDto() {
+            return mealDto;
+        }
+    }
+
 //
 //    public static class CloseEvent extends MealFormEvent {
-//        CloseEvent(MealViewPopUp source) {
+//        CloseEvent(MealViewForm source) {
 //            super(source, null);
 //        }
 //    }
