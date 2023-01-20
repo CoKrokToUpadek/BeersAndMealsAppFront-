@@ -2,12 +2,12 @@ package com.cokroktosmok.beersandmealsappfront.view;
 
 import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
-import com.cokroktosmok.beersandmealsappfront.security.SecurityService;
+
 import com.cokroktosmok.beersandmealsappfront.service.BackEndDataManipulatorService;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -17,10 +17,12 @@ import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
 
+import javax.annotation.security.PermitAll;
 import java.util.List;
 
 @Route(value = "/")
 @PageTitle("BeersAndMeal")
+@PermitAll
 public class MainView extends VerticalLayout {
     private final Grid<MealDto> mealDtoGrid = new Grid<>(MealDto.class);
     private final Grid<BeerDto> beerDtoGrid=new Grid<>(BeerDto.class);
@@ -30,16 +32,16 @@ public class MainView extends VerticalLayout {
     MealViewForm mealViewForm = new MealViewForm();
 
     BeerViewForm beerViewForm =new BeerViewForm();
-    SecurityService securityService;
+
     BackEndDataManipulatorService backEndDataManipulatorService;
 
     Accordion volumeAccordion=new Accordion();
 
 
     @Autowired
-    public MainView(SecurityService securityService,BackEndDataManipulatorService backEndDataManipulatorService) {
+    public MainView(BackEndDataManipulatorService backEndDataManipulatorService) {
 
-        this.securityService=securityService;
+
         this.backEndDataManipulatorService=backEndDataManipulatorService;
         add(buttons());
         add(getGridsLayout(backEndDataManipulatorService));
@@ -60,7 +62,7 @@ public class MainView extends VerticalLayout {
     }
 
     private HorizontalLayout buttons(){
-        Button logout = new Button("Log out", e -> securityService.logout());
+        Button logout = new Button("Log out",e-> UI.getCurrent().navigate("/login"));
         return new HorizontalLayout(logout);
     }
 

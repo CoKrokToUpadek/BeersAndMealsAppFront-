@@ -8,8 +8,11 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+import javax.annotation.security.DenyAll;
+
 
 @Route("login")
+@DenyAll
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
    private final LoginForm loginForm = new LoginForm();
@@ -19,7 +22,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         setAlignItems(Alignment.CENTER);
         loginForm.setI18n(configureForm());
         loginForm.setAction("login");
-        loginForm.addForgotPasswordListener(event-> UI.getCurrent().navigate("/createaccount"));
+        loginForm.addForgotPasswordListener(event-> UI.getCurrent().getPage().setLocation ("create_account"));
         add(new H1("BeersAndMeals"), loginForm);
     }
 
@@ -32,7 +35,6 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
     }
     @Override
     public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
-        // inform the user about an authentication error
         if(beforeEnterEvent.getLocation()
                 .getQueryParameters()
                 .getParameters()
