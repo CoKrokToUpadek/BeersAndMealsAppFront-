@@ -2,14 +2,20 @@ package com.cokroktosmok.beersandmealsappfront.config;
 
 import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
+import com.cokroktosmok.beersandmealsappfront.data.dto.user.CreatedUserDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserCredentialsDto;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,9 +29,21 @@ public class BackendCommunicationClient {
     private final Config beerConfig;
     private final RestTemplate restTemplate;
 
-    public ResponseEntity addMealToFavorites(String mealName){
+    private final ObjectMapper mapper;
+    public String createUser(CreatedUserDto userDto) throws JsonProcessingException {
+        URI url =buildUriForCreatingUser();
+        return restTemplate.postForObject(url,userDto, String.class);
+
+    }
+
+    public Boolean checkIfLoginIsTaken(String login){
+        URI url=buildUriForCheckIfLoginIsTaken(login);
+        return restTemplate.getForObject(url,Boolean.class);
+    }
+
+    public ResponseEntity <String> addMealToFavorites(String mealName){
         URI url=buildUriForAddingMealToFavorites(mealName);
-        return restTemplate.postForObject(url,null, ResponseEntity.class);
+        return restTemplate.getForObject(url, ResponseEntity.class);
     }
 
 
@@ -69,6 +87,17 @@ public class BackendCommunicationClient {
                 .toUri();
     }
 
+
+    private URI buildUriForCheckIfLoginIsTaken(String login) {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getUserFunctionalities())
+                .pathSegment(beerConfig.getIsLoginTaken())
+                .queryParam("login",login)
+                .build()
+                .encode()
+                .toUri();
+    }
+
     private URI buildUriForLogin(String login) {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
                 .pathSegment(beerConfig.getUserFunctionalities())
@@ -89,6 +118,13 @@ public class BackendCommunicationClient {
                 .toUri();
     }
 
-
+    private URI buildUriForCreatingUser(){
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getUserFunctionalities())
+                .pathSegment(beerConfig.getCreateUser())
+                .build()
+                .encode()
+                .toUri();
+    }
 
 }
