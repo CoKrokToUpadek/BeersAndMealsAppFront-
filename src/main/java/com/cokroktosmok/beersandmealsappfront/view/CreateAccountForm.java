@@ -5,7 +5,7 @@ import com.cokroktosmok.beersandmealsappfront.data.dto.user.CreatedUserDto;
 import com.cokroktosmok.beersandmealsappfront.errorhandlers.UserCreationException;
 import com.cokroktosmok.beersandmealsappfront.static_recources.GraphicAssets;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 
@@ -23,9 +23,8 @@ import com.vaadin.flow.router.Route;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Locale;
-import java.util.concurrent.atomic.AtomicReference;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 
 @Route(value = "create_account")
@@ -54,19 +53,23 @@ public class CreateAccountForm extends VerticalLayout {
 
     String loginPattern = "^\\S{4,}$";
 
-    String emailPattern="^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
+    String emailPattern = "^[a-zA-Z0-9_!#$%&’*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
 
     BackendCommunicationClient backendCommunicationClient;
-    Binder<CreatedUserDto> binder=new Binder<>(CreatedUserDto.class);
+    Binder<CreatedUserDto> binder = new Binder<>(CreatedUserDto.class);
     CreatedUserDto createdUserDto;
-    Dialog dialog=new Dialog();
+    Dialog dialog = new Dialog();
+    ResponseEntity<Boolean> booleanResponseEntity;
+
+    ResponseEntity<String> stringResponseEntity;
 
 
     @Autowired
-    public CreateAccountForm(BackendCommunicationClient backendCommunicationClient,CreatedUserDto createdUserDto) {
-        this.createdUserDto=createdUserDto;
+    public CreateAccountForm(BackendCommunicationClient backendCommunicationClient, CreatedUserDto createdUserDto) {
+        this.setClassName("create-account-form");
+        this.createdUserDto = createdUserDto;
         binder.setBean(createdUserDto);
-        this.backendCommunicationClient=backendCommunicationClient;
+        this.backendCommunicationClient = backendCommunicationClient;
         createdUserBinderConfig();
         setSizeFull();
         setAlignItems(Alignment.CENTER);
@@ -81,78 +84,87 @@ public class CreateAccountForm extends VerticalLayout {
 
     }
 
-    private void createdUserBinderConfig(){
-        binder.forField(login).withValidator(value->!backendCommunicationClient.checkIfLoginIsTaken(value),"login is already taken")
-                .withValidator(value-> value.matches(loginPattern), "login does not match criteria").asRequired("cannot be empty").bind(CreatedUserDto::getLogin,CreatedUserDto::setLogin);
-        binder.forField(email).asRequired("cannot be empty").withValidator(value->value.matches(emailPattern),"password does not match criteria")
-                .bind(CreatedUserDto::getEmail,CreatedUserDto::setEmail);
-        binder.forField(password).asRequired("cannot be empty").withValidator(value->value.matches(passwordPattern),"password does not match criteria")
-                .bind(CreatedUserDto::getPassword,CreatedUserDto::setPassword);
-        binder.forField(confirmPassword).asRequired("passwords do not match").withValidator(value->passwordMatcher(value,password.getValue()),
-                "passwords do not match").bind(CreatedUserDto::getPassword,CreatedUserDto::setPassword);
+    private void createdUserBinderConfig() {
+        binder.forField(login).withValidator(value -> {
+                    //for connection problems
+                    booleanResponseEntity = backendCommunicationClient.checkIfLoginIsTaken(value);
+                    if (booleanResponseEntity.getStatusCode() == HttpStatus.OK) {
+                        return Boolean.FALSE.equals(booleanResponseEntity.getBody());
+                    } else {
+                        dialogConfig("comm error");
+                        return true;
+                    }
+                }, "login is already taken")
+                .withValidator(value -> value.matches(loginPattern), "login does not match criteria").asRequired("cannot be empty").bind(CreatedUserDto::getLogin, CreatedUserDto::setLogin);
+        binder.forField(email).asRequired("cannot be empty").withValidator(value -> value.matches(emailPattern), "password does not match criteria")
+                .bind(CreatedUserDto::getEmail, CreatedUserDto::setEmail);
+        binder.forField(password).asRequired("cannot be empty").withValidator(value -> value.matches(passwordPattern), "password does not match criteria")
+                .bind(CreatedUserDto::getPassword, CreatedUserDto::setPassword);
+        binder.forField(confirmPassword).asRequired("passwords do not match").withValidator(value -> passwordMatcher(value, password.getValue()),
+                "passwords do not match").bind(CreatedUserDto::getPassword, CreatedUserDto::setPassword);
         binder.bindInstanceFields(this);
     }
-    //Im creating dialog
-    public void dialogConfig(String e){
+
+    public void dialogConfig(String e) {
         dialog.removeAll();
-        if (e.equals(UserCreationException.ERR_EMAIL_TAKEN) || e.equals(UserCreationException.ERR_LOGIN_TAKEN) ||e.equals(UserCreationException.ERR_MISSING_INFORMATION)){
+        dialog.getFooter().removeAll();
+        Button button = new Button();
+        VerticalLayout verticalLayout = new VerticalLayout();
+        if (e.equals(UserCreationException.ERR_EMAIL_TAKEN) || e.equals(UserCreationException.ERR_LOGIN_TAKEN) || e.equals(UserCreationException.ERR_MISSING_INFORMATION)) {
             dialog.setHeaderTitle("Ups! There Was problem");
-            Button button=new Button();
-           VerticalLayout verticalLayout=new VerticalLayout();
-           verticalLayout.add(new Span(e));
-           button.addClickListener(r->dialog.close());
-           button.setText("close");
-           verticalLayout.add(button);
-           dialog.add(verticalLayout);
-        }else if(e.equals("user was created successfully")){
+            dialog.add(new Span(e));
+            button.addClickListener(r -> dialog.close());
+            button.setText("close");
+            verticalLayout.add(button);
+            dialog.getFooter().add(verticalLayout);
+            dialog.open();
+        } else if (e.equals("user was created successfully")) {
             dialog.setHeaderTitle("Success!");
-            Button button=new Button();
-            VerticalLayout verticalLayout=new VerticalLayout();
-            verticalLayout.add(new Span(e));
-            button.addClickListener(r->{
+            dialog.add(new Span(e));
+            button.addClickListener(r -> {
                 goBack.click();
                 dialog.close();
             });
             button.setText("return to login page");
             verticalLayout.add(button);
-            dialog.add(verticalLayout);
-        }else {
+            dialog.getFooter().add(verticalLayout);
+            dialog.open();
+        } else {
             dialog.setHeaderTitle("Internal Error");
-            Button button=new Button();
-            VerticalLayout verticalLayout=new VerticalLayout();
-            verticalLayout.add(new Span("Something went really bad. Try Again later"));
-            button.addClickListener(r->{
+            dialog.add("something went bad");
+            button.addClickListener(r -> {
                 goBack.click();
                 dialog.close();
             });
             button.setText("return to login page");
             verticalLayout.add(button);
-            dialog.add(verticalLayout);
+            dialog.getFooter().add(verticalLayout);
+            dialog.addDialogCloseActionListener(event -> {
+                UI.getCurrent().navigate("/login");
+                dialog.close();
+            });
+            dialog.open();
         }
-        dialog.open();
 
     }
 
     private HorizontalLayout createButtonsConfigurationAndLayout(Button confirm, Button goBack) {
         confirm.setEnabled(false);
         goBack.addClickListener(event -> UI.getCurrent().navigate("/login"));
-        binder.addStatusChangeListener(value-> confirm.setEnabled(binder.isValid()));
-        confirm.addClickListener(e-> {
-            try {
-             final String s= (backendCommunicationClient.createUser(createdUserDto));
-             dialogConfig(s);
-            } catch (JsonProcessingException ex) {
-
+        binder.addStatusChangeListener(value -> confirm.setEnabled(binder.isValid()));
+        confirm.addClickListener(e -> {
+            stringResponseEntity = backendCommunicationClient.createUser(createdUserDto);
+            if (stringResponseEntity.getStatusCode() == HttpStatus.OK) {
+                dialogConfig(stringResponseEntity.getBody());
+            } else {
+                dialogConfig("comm error");
             }
-
-
         });
         return new HorizontalLayout(confirm, goBack);
     }
 
 
     private HorizontalLayout loginConfigAndLayout(TextField login) {
-
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         login.setRequired(true);
         login.setWidth("400px");
@@ -176,17 +188,17 @@ public class CreateAccountForm extends VerticalLayout {
 
     private HorizontalLayout passwordFieldConfigAndLayout(PasswordField password, PasswordField confirmPassword) {
         //field specific binders for smother UI
-        Binder.Binding<CreatedUserDto,String> passwordBinder= binder.forField(password).asRequired("cannot be empty").withValidator(value->value.matches(passwordPattern),"password does not match criteria")
-                .bind(CreatedUserDto::getPassword,CreatedUserDto::setPassword);
-        Binder.Binding<CreatedUserDto,String> confirmPasswordBinder=  binder.forField(confirmPassword).asRequired("passwords do not match").withValidator(value->passwordMatcher(value,password.getValue()),
-                "passwords do not match").bind(CreatedUserDto::getPassword,CreatedUserDto::setPassword);
+        Binder.Binding<CreatedUserDto, String> passwordBinder = binder.forField(password).asRequired("cannot be empty").withValidator(value -> value.matches(passwordPattern), "password does not match criteria")
+                .bind(CreatedUserDto::getPassword, CreatedUserDto::setPassword);
+        Binder.Binding<CreatedUserDto, String> confirmPasswordBinder = binder.forField(confirmPassword).asRequired("passwords do not match").withValidator(value -> passwordMatcher(value, password.getValue()),
+                "passwords do not match").bind(CreatedUserDto::getPassword, CreatedUserDto::setPassword);
         password.setValueChangeMode(ValueChangeMode.EAGER);
         confirmPassword.setValueChangeMode(ValueChangeMode.EAGER);
-        password.addValueChangeListener(value->{
+        password.addValueChangeListener(value -> {
             passwordBinder.validate();
             confirmPasswordBinder.validate();
         });
-        confirmPassword.addValueChangeListener(value->{
+        confirmPassword.addValueChangeListener(value -> {
             passwordBinder.validate();
             confirmPasswordBinder.validate();
         });
@@ -194,7 +206,7 @@ public class CreateAccountForm extends VerticalLayout {
         return new HorizontalLayout(password, confirmPassword);
     }
 
-    private boolean passwordMatcher(String password, String confirmPassword){
+    private boolean passwordMatcher(String password, String confirmPassword) {
         return password.equals(confirmPassword);
     }
 }

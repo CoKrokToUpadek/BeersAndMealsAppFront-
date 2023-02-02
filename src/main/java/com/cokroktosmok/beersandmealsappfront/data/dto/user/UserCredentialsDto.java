@@ -19,4 +19,7 @@ public class UserCredentialsDto {
 
     @JsonProperty("userRole")
     private String userRole;
+
+    @JsonProperty("token")
+    private String token;
 }

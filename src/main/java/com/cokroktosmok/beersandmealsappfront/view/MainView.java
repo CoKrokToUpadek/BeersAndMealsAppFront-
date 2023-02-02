@@ -7,6 +7,7 @@ import com.cokroktosmok.beersandmealsappfront.service.BackEndDataManipulatorServ
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -15,6 +16,8 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.context.SecurityContext;
 
 
 import javax.annotation.security.PermitAll;
@@ -23,6 +26,7 @@ import java.util.List;
 @Route(value = "/")
 @PageTitle("BeersAndMeal")
 @PermitAll
+@CssImport("./styles/styles.css")
 public class MainView extends VerticalLayout {
     private final Grid<MealDto> mealDtoGrid = new Grid<>(MealDto.class);
     private final Grid<BeerDto> beerDtoGrid=new Grid<>(BeerDto.class);
@@ -40,8 +44,6 @@ public class MainView extends VerticalLayout {
 
     @Autowired
     public MainView(BackEndDataManipulatorService backEndDataManipulatorService) {
-
-
         this.backEndDataManipulatorService=backEndDataManipulatorService;
         add(buttons());
         add(getGridsLayout(backEndDataManipulatorService));

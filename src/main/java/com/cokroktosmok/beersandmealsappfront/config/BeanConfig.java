@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.Cookie;
+
 @Configuration
 public class BeanConfig {
     @Bean
@@ -20,6 +22,11 @@ public class BeanConfig {
     @Bean
     public ObjectMapper objectMapper(){
         return new ObjectMapper();
+    }
+
+    @Bean
+    public Cookie cookie(){
+        return new Cookie("token","value");
     }
 
 }

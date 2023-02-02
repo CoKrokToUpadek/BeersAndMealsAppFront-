@@ -4,46 +4,70 @@ import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.user.CreatedUserDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserCredentialsDto;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.support.BasicAuthenticationInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@RequiredArgsConstructor
+
 @Component
 public class BackendCommunicationClient {
 
     private final Config beerConfig;
     private final RestTemplate restTemplate;
 
-    private final ObjectMapper mapper;
-    public String createUser(CreatedUserDto userDto) throws JsonProcessingException {
-        URI url =buildUriForCreatingUser();
-        return restTemplate.postForObject(url,userDto, String.class);
+
+
+    @Autowired
+    public BackendCommunicationClient(Config beerConfig, RestTemplate restTemplate) {
+        this.beerConfig = beerConfig;
+        this.restTemplate = restTemplate;
+
 
     }
 
-    public Boolean checkIfLoginIsTaken(String login){
-        URI url=buildUriForCheckIfLoginIsTaken(login);
-        return restTemplate.getForObject(url,Boolean.class);
+    public ResponseEntity<String> createUser(CreatedUserDto userDto){
+        URI url =buildUriForCreatingUser();
+        try {
+            return restTemplate.postForEntity(url,userDto, String.class);
+        }catch (ResourceAccessException e){
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
+     private  HttpEntity<String> headers(){
+         String holder=SecurityContextHolder.getContext().getAuthentication().getName();
+         HttpHeaders headers = new HttpHeaders();
+         headers.setContentType(MediaType.APPLICATION_JSON);
+         headers.setBearerAuth(TokenStorage.getToken(holder));
+         HttpEntity<String> entity = new HttpEntity<>(headers);
+         return entity;
+
+    };
+
+
+    public ResponseEntity<Boolean> checkIfLoginIsTaken(String login) {
+            URI url=buildUriForCheckIfLoginIsTaken(login);
+            try{
+                return  restTemplate.getForEntity(url,Boolean.class);
+
+            }catch (ResourceAccessException e){
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
     }
 
     public ResponseEntity <String> addMealToFavorites(String mealName){
         URI url=buildUriForAddingMealToFavorites(mealName);
-        return restTemplate.getForObject(url, ResponseEntity.class);
+        return restTemplate.getForEntity(url, String.class);
     }
 
 
@@ -55,9 +79,12 @@ public class BackendCommunicationClient {
 
     public List<MealDto> getMealDtoList() {
         URI url = buildUriForAllMeals();
-        MealDto[] mealDtoList = restTemplate.getForObject(url, MealDto[].class);
-        return Optional.of(mealDtoList).map(Arrays::asList)
-                .orElse(Collections.emptyList());
+        HttpEntity<String> entity= headers();
+ //       MealDto[] mealDtoList = restTemplate.getForObject(url, MealDto[].class);
+//        return Optional.of(mealDtoList).map(Arrays::asList)
+//                .orElse(Collections.emptyList());
+        ResponseEntity< MealDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, MealDto[].class);
+        return Arrays.asList(response.getBody());
     }
 
     private URI buildUriForAllMeals() {
@@ -72,10 +99,9 @@ public class BackendCommunicationClient {
 
     public List<BeerDto> getBeerDtoList() {
         URI url = buildUriForAllBeers();
-        restTemplate.getInterceptors().add(new BasicAuthenticationInterceptor("user2222","user"));
-        BeerDto[] beerDtoList = restTemplate.getForObject(url, BeerDto[].class);
-        return Optional.of(beerDtoList).map(Arrays::asList)
-                .orElse(Collections.emptyList());
+        HttpEntity<String> entity= headers();
+        ResponseEntity< BeerDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, BeerDto[].class);
+        return Arrays.asList(response.getBody());
     }
 
     private URI buildUriForAllBeers() {

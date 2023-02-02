@@ -23,7 +23,6 @@ public class BackEndDataManipulatorService {
 
     public List<MealDto> findAllMeals(String stringFilter) {
         mealDtoList=backendCommunicationClient.getMealDtoList();
-
         if (stringFilter == null || stringFilter.isEmpty()) {
             return mealDtoList;
         } else {
@@ -34,7 +33,6 @@ public class BackEndDataManipulatorService {
 
     public List<BeerDto> findAllBeers(String stringFilter) {
         beerDtoList=backendCommunicationClient.getBeerDtoList();
-
         if (stringFilter == null || stringFilter.isEmpty()) {
             return beerDtoList;
         } else {

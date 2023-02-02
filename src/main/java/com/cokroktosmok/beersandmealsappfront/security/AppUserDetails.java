@@ -57,4 +57,8 @@ public class AppUserDetails implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+    public String getToken(){
+        return userEntity.getToken();
+    }
+
 }
