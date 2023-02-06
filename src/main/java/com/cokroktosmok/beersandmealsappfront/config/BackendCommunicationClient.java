@@ -30,8 +30,6 @@ public class BackendCommunicationClient {
     public BackendCommunicationClient(Config beerConfig, RestTemplate restTemplate) {
         this.beerConfig = beerConfig;
         this.restTemplate = restTemplate;
-
-
     }
 
     public ResponseEntity<String> createUser(CreatedUserDto userDto){

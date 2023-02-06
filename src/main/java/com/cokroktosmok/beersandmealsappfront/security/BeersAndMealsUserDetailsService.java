@@ -11,7 +11,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.Cookie;
 import java.util.Optional;
 
 @Service
@@ -20,7 +19,7 @@ public class BeersAndMealsUserDetailsService implements UserDetailsService {
     BackendCommunicationClient backendCommunicationClient;
 
     @Autowired
-    public BeersAndMealsUserDetailsService(BackendCommunicationClient backendCommunicationClient, Cookie cookie) {
+    public BeersAndMealsUserDetailsService(BackendCommunicationClient backendCommunicationClient) {
         this.backendCommunicationClient = backendCommunicationClient;
 
     }

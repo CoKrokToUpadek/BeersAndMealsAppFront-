@@ -2,12 +2,14 @@ package com.cokroktosmok.beersandmealsappfront.view;
 
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.IngredientAndMeasureDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
+import com.cokroktosmok.beersandmealsappfront.static_recources.GraphicAssets;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
@@ -19,11 +21,14 @@ import java.util.ArrayList;
 
 public class MealViewForm extends FormLayout {
     private MealDto mealDto;
+    Image thumbnail;
+
+    private final int imageHeight=400;
+    private final int imageWidth=400;
     TextField name = new TextField("name");
     TextField category = new TextField("category");
     TextField area = new TextField("area");
     TextArea instruction = new TextArea("instruction");
-    TextField thumbnail = new TextField("thumbnail");
     TextField tags = new TextField("tags");
     TextField youtubeLink = new TextField("youtubeLink");
     TextField source = new TextField("source");
@@ -34,9 +39,22 @@ public class MealViewForm extends FormLayout {
     public MealViewForm() {
         instruction.setMaxLength(5000);
         binder.bindInstanceFields(this);
-
-        add(name,category,area, instruction,thumbnail,tags,youtubeLink,configureGrid(),source,createButtonsLayout());
+        textFieldLock(true);
+        //without this initialisation vaadin ignores this field even after its update during data-binding
+        thumbnail=GraphicAssets.imageConfig("ph",imageWidth,imageHeight);
+        add(thumbnail,name,category,area, instruction,tags,youtubeLink,configureGrid(),source,createButtonsLayout());
     }
+
+    private  void textFieldLock(boolean lockValue){
+        name.setReadOnly(lockValue);
+        category.setReadOnly(lockValue);
+        area.setReadOnly(lockValue);
+        instruction.setReadOnly(lockValue);
+        tags.setReadOnly(lockValue);
+        youtubeLink.setReadOnly(lockValue);
+        source.setReadOnly(lockValue);
+    }
+
 
     private HorizontalLayout createButtonsLayout() {
         favoritesButton.addClickShortcut(Key.ENTER);
@@ -49,6 +67,9 @@ public class MealViewForm extends FormLayout {
     }
     public void setMeal(MealDto meal) {
         this.mealDto = meal;
+        if (meal != null){
+            thumbnail= GraphicAssets.imageConfig(mealDto.getThumbnail(),imageWidth,imageHeight);
+        }
         binder.readBean(meal);
     }
 

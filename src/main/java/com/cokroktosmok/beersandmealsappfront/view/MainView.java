@@ -16,8 +16,6 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.CurrentSecurityContext;
-import org.springframework.security.core.context.SecurityContext;
 
 
 import javax.annotation.security.PermitAll;
@@ -50,6 +48,8 @@ public class MainView extends VerticalLayout {
         configureMealViewForm();
         configureBeerViewForm();
         setSizeFull();
+        mealViewForm.setVisible(false);
+        beerViewForm.setVisible(false);
     }
 
 
