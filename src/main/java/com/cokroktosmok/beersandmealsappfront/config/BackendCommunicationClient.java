@@ -25,65 +25,92 @@ public class BackendCommunicationClient {
     private final RestTemplate restTemplate;
 
 
-
     @Autowired
     public BackendCommunicationClient(Config beerConfig, RestTemplate restTemplate) {
         this.beerConfig = beerConfig;
         this.restTemplate = restTemplate;
     }
 
-    public ResponseEntity<String> createUser(CreatedUserDto userDto){
-        URI url =buildUriForCreatingUser();
+    public ResponseEntity<String> createUser(CreatedUserDto userDto) {
+        URI url = buildUriForCreatingUser();
         try {
-            return restTemplate.postForEntity(url,userDto, String.class);
-        }catch (ResourceAccessException e){
+            return restTemplate.postForEntity(url, userDto, String.class);
+        } catch (ResourceAccessException e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
     }
 
-     private  HttpEntity<String> headers(){
-         String holder=SecurityContextHolder.getContext().getAuthentication().getName();
-         HttpHeaders headers = new HttpHeaders();
-         headers.setContentType(MediaType.APPLICATION_JSON);
-         headers.setBearerAuth(TokenStorage.getToken(holder));
-         HttpEntity<String> entity = new HttpEntity<>(headers);
-         return entity;
+    private HttpEntity<String> headers() {
+        String holder = SecurityContextHolder.getContext().getAuthentication().getName();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(TokenStorage.getToken(holder));
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        return entity;
+    }
 
-    };
-
+    private HttpEntity<String> headersForPost(String argument) {
+        String holder = SecurityContextHolder.getContext().getAuthentication().getName();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(TokenStorage.getToken(holder));
+        HttpEntity<String> entity = new HttpEntity<>(argument,headers);
+        return entity;
+    }
 
     public ResponseEntity<Boolean> checkIfLoginIsTaken(String login) {
-            URI url=buildUriForCheckIfLoginIsTaken(login);
-            try{
-                return  restTemplate.getForEntity(url,Boolean.class);
+        URI url = buildUriForCheckIfLoginIsTaken(login);
+        try {
+            return restTemplate.getForEntity(url, Boolean.class);
 
-            }catch (ResourceAccessException e){
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+        } catch (ResourceAccessException e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    public ResponseEntity <String> addMealToFavorites(String mealName){
-        URI url=buildUriForAddingMealToFavorites(mealName);
-        return restTemplate.getForEntity(url, String.class);
-    }
-
-
-    public Optional<UserCredentialsDto> getUser(String login){
-        URI url=buildUriForLogin(login);
-        UserCredentialsDto user=restTemplate.getForObject(url,UserCredentialsDto.class);
+    public Optional<UserCredentialsDto> getUser(String login) {
+        URI url = buildUriForLogin(login);
+        UserCredentialsDto user = restTemplate.getForObject(url, UserCredentialsDto.class);
         return Optional.of(user);
     }
 
     public List<MealDto> getMealDtoList() {
         URI url = buildUriForAllMeals();
-        HttpEntity<String> entity= headers();
- //       MealDto[] mealDtoList = restTemplate.getForObject(url, MealDto[].class);
-//        return Optional.of(mealDtoList).map(Arrays::asList)
-//                .orElse(Collections.emptyList());
-        ResponseEntity< MealDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, MealDto[].class);
+        HttpEntity<String> entity = headers();
+        ResponseEntity<MealDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, MealDto[].class);
         return Arrays.asList(response.getBody());
     }
+
+    public List<MealDto> getFavoriteMealDtoList(){
+        URI url=buildUriForFavoriteMeals();
+        HttpEntity<String> entity = headers();
+        ResponseEntity<MealDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, MealDto[].class);
+        return Arrays.asList(response.getBody());
+    }
+
+    public List<BeerDto> getFavoriteBeerDtoList(){
+        URI url=buildUriForFavoriteBeers();
+        HttpEntity<String> entity = headers();
+        ResponseEntity<BeerDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, BeerDto[].class);
+        return Arrays.asList(response.getBody());
+    }
+
+    public String addToFavoriteMealDtoList(String meal){
+        URI url=buildUriForAddToFavoriteMeals(meal);
+        HttpEntity<String> entity = headersForPost("test");
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+        return response.getBody();
+    }
+
+    public String addToFavoriteBeerDtoList(String beer){
+        URI url=buildUriForAddToFavoriteBeers(beer);
+        HttpEntity<String> entity = headersForPost("test");
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
+        return response.getBody();
+    }
+
+
 
     private URI buildUriForAllMeals() {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
@@ -97,8 +124,8 @@ public class BackendCommunicationClient {
 
     public List<BeerDto> getBeerDtoList() {
         URI url = buildUriForAllBeers();
-        HttpEntity<String> entity= headers();
-        ResponseEntity< BeerDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, BeerDto[].class);
+        HttpEntity<String> entity = headers();
+        ResponseEntity<BeerDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, BeerDto[].class);
         return Arrays.asList(response.getBody());
     }
 
@@ -116,7 +143,7 @@ public class BackendCommunicationClient {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
                 .pathSegment(beerConfig.getUserFunctionalities())
                 .pathSegment(beerConfig.getIsLoginTaken())
-                .queryParam("login",login)
+                .queryParam("login", login)
                 .build()
                 .encode()
                 .toUri();
@@ -126,26 +153,55 @@ public class BackendCommunicationClient {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
                 .pathSegment(beerConfig.getUserFunctionalities())
                 .pathSegment(beerConfig.getLogin())
-                .queryParam("login",login)
+                .queryParam("login", login)
                 .build()
                 .encode()
                 .toUri();
     }
 
-    private URI buildUriForAddingMealToFavorites(String meal) {
+    private URI buildUriForCreatingUser() {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
                 .pathSegment(beerConfig.getUserFunctionalities())
-                .pathSegment(beerConfig.getAddToMealToFavorites())
+                .pathSegment(beerConfig.getCreateUser())
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForFavoriteMeals() {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getUserFunctionalities())
+                .pathSegment(beerConfig.getGetFavoriteMeals())
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForFavoriteBeers() {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getUserFunctionalities())
+                .pathSegment(beerConfig.getGetFavoriteBeers())
+                .build()
+                .encode()
+                .toUri();
+    }
+
+
+    private URI buildUriForAddToFavoriteMeals(String meal) {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getUserFunctionalities())
+                .pathSegment(beerConfig.getAddToFavoriteMeals())
                 .queryParam("mealName",meal)
                 .build()
                 .encode()
                 .toUri();
     }
 
-    private URI buildUriForCreatingUser(){
+    private URI buildUriForAddToFavoriteBeers(String beer) {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
                 .pathSegment(beerConfig.getUserFunctionalities())
-                .pathSegment(beerConfig.getCreateUser())
+                .pathSegment(beerConfig.getAddToFavoriteBeers())
+                .queryParam("beerName",beer)
                 .build()
                 .encode()
                 .toUri();

@@ -35,5 +35,17 @@ public class Config {
     @Value("${beersandmeals.api.create_user}")
     private String createUser;
 
+    @Value("${beersandmeals.api.get_favorite_beers}")
+    private String getFavoriteBeers;
+
+    @Value("${beersandmeals.api.get_favorite_meals}")
+    private String getFavoriteMeals;
+
+    @Value("${beersandmeals.api.add_favorite_beers}")
+    private String addToFavoriteBeers;
+
+    @Value("${beersandmeals.api.add_favorite_meals}")
+    private String addToFavoriteMeals;
+
 
 }

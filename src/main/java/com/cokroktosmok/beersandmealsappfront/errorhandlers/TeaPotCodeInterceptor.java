@@ -10,23 +10,32 @@ import org.springframework.http.client.ClientHttpResponse;
 
 
 import java.io.IOException;
+import java.util.List;
 
 public class TeaPotCodeInterceptor  implements ClientHttpRequestInterceptor {
-    private HttpStatus statusCode;
-    private String message;
+    private List<HttpStatus> statusCodes;
 
-    public TeaPotCodeInterceptor(HttpStatus statusCode, String message) {
-        this.statusCode = statusCode;
-        this.message = message;
+    public TeaPotCodeInterceptor(List<HttpStatus> statusCode) {
+        this.statusCodes = statusCode;
     }
 
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
         ClientHttpResponse response = execution.execute(request, body);
-        if (response.getStatusCode().equals(statusCode)) {
-            VaadinSession.getCurrent().getSession().invalidate();
-            UI.getCurrent().navigate("login");
-        }
+//        if (response.getStatusCode().equals(statusCodes) || response.getStatusCode().equals(HttpStatus.UNAUTHORIZED)) {
+//            VaadinSession.getCurrent().getSession().invalidate();
+//            UI.getCurrent().navigate("login");
+//        }
+        statusCodes.forEach(e-> {
+            try {
+                if (response.getStatusCode().equals(e)){
+                    VaadinSession.getCurrent().getSession().invalidate();
+                    UI.getCurrent().navigate("login");
+                }
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
         return response;
     }
 }

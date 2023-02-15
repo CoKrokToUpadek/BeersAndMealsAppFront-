@@ -4,6 +4,7 @@ import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
 
 import com.cokroktosmok.beersandmealsappfront.service.BackEndDataManipulatorService;
+import com.cokroktosmok.beersandmealsappfront.static_recources.GraphicAssets;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
@@ -14,8 +15,11 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
+import com.vaadin.flow.router.PreserveOnRefresh;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.spring.annotation.SpringComponent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 
 import javax.annotation.security.PermitAll;
@@ -26,25 +30,25 @@ import java.util.List;
 @PermitAll
 @CssImport("./styles/styles.css")
 public class MainView extends VerticalLayout {
+
     private final Grid<MealDto> mealDtoGrid = new Grid<>(MealDto.class);
     private final Grid<BeerDto> beerDtoGrid=new Grid<>(BeerDto.class);
     TextField filterBeerText = new TextField();
     TextField filterMealText = new TextField();
 
-    MealViewForm mealViewForm = new MealViewForm();
+    MealViewForm mealViewForm;
 
-    BeerViewForm beerViewForm =new BeerViewForm();
+    BeerViewForm beerViewForm;
 
     BackEndDataManipulatorService backEndDataManipulatorService;
-
-    Accordion volumeAccordion=new Accordion();
-
 
     @Autowired
     public MainView(BackEndDataManipulatorService backEndDataManipulatorService) {
         this.backEndDataManipulatorService=backEndDataManipulatorService;
+        this.mealViewForm = new MealViewForm(this.backEndDataManipulatorService);
+        this.beerViewForm=new BeerViewForm(this.backEndDataManipulatorService);
         add(buttons());
-        add(getGridsLayout(backEndDataManipulatorService));
+        add(getGridsLayout());
         configureMealViewForm();
         configureBeerViewForm();
         setSizeFull();
@@ -65,10 +69,12 @@ public class MainView extends VerticalLayout {
 
     private HorizontalLayout buttons(){
         Button logout = new Button("Log out",e-> UI.getCurrent().navigate("/login"));
-        return new HorizontalLayout(logout);
+        Button favorites = new Button("favorites lists",e->setFavoriteLists());
+        Button defaultList = new Button("beers and meals lists",e->setDefaultLists());
+        return new HorizontalLayout(logout,defaultList,favorites);
     }
 
-    private HorizontalLayout getGridsLayout(BackEndDataManipulatorService backEndDataManipulatorService){
+    private HorizontalLayout getGridsLayout(){
         HorizontalLayout grids= new HorizontalLayout();
         grids.add(beerViewForm);
         grids.add(getBeerLayout(backEndDataManipulatorService));
@@ -105,6 +111,19 @@ public class MainView extends VerticalLayout {
         return beersLayout;
     }
 
+
+    private void setDefaultLists(){
+        beerDtoGrid.setItems(backEndDataManipulatorService.findAllBeers(null));
+        mealDtoGrid.setItems(backEndDataManipulatorService.findAllMeals(null));
+    }
+
+
+
+    private void setFavoriteLists(){
+        beerDtoGrid.setItems(backEndDataManipulatorService.findFavoriteBeers(null));
+        mealDtoGrid.setItems(backEndDataManipulatorService.findFavoriteMeals(null));
+    }
+
     private void configureMealViewForm(){
         mealViewForm.setWidth("80em");
     }
@@ -128,6 +147,9 @@ public class MainView extends VerticalLayout {
             beerViewForm.setBeer(beerDto);
             beerViewForm.volumeAccordionSetVolume();
             beerViewForm.boilVolumeAccordionSetVolume();
+            beerViewForm.setHopsGrid();
+            beerViewForm.setMaltsGrid();
+            beerViewForm.setFoodPairingsGrid();
             beerViewForm.setVisible(true);
         }
     }

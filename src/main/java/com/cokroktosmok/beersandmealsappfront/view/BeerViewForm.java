@@ -1,11 +1,15 @@
 package com.cokroktosmok.beersandmealsappfront.view;
 
-import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
-import com.vaadin.flow.component.ComponentEvent;
+import com.cokroktosmok.beersandmealsappfront.data.dto.beer.*;
+import com.cokroktosmok.beersandmealsappfront.data.dto.meal.IngredientAndMeasureDto;
+import com.cokroktosmok.beersandmealsappfront.service.BackEndDataManipulatorService;
+import com.cokroktosmok.beersandmealsappfront.static_recources.GraphicAssets;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -13,12 +17,20 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 public class BeerViewForm extends FormLayout {
+
+    private final int embeddedHeight = 400;
+    private final int embeddedWidth = 200;
+    private final GraphicAssets graphicAssets = new GraphicAssets();
     private BeerDto beerDto;
     TextField name = new TextField("name");
-    TextField description = new TextField("description");
-    TextField image_url = new TextField("image_url");
+    TextArea description = new TextArea("description");
+    Image imageUrl;
     TextField abv = new TextField("abv");
     TextField ibu = new TextField("ibu");
     TextField target_og = new TextField("target_og");
@@ -26,94 +38,165 @@ public class BeerViewForm extends FormLayout {
     TextField srm = new TextField("srm");
     TextField attenuationLevel = new TextField("attenuationLevel");
 
-    Accordion volume=new Accordion();
+    Accordion volume = new Accordion();
 
-    Accordion boilVolume=new Accordion();
+    Accordion boilVolume = new Accordion();
 
     TextArea brewers_tips = new TextArea("brewers_tips");
     TextField contributed_by = new TextField("contributed_by");
     Button favoritesButton = new Button("Favorites");
     Button closeButton = new Button("close");
 
-    HorizontalLayout volumeHorizontalLayout =new HorizontalLayout();
+    Span maltName=new Span("Malts list");
 
-    HorizontalLayout boilVolumeHorizontalLayout =new HorizontalLayout();
+    Span hopsName=new Span("Hops list");
+
+    TextField yeast=new TextField("Yeast");
+
+    HorizontalLayout volumeHorizontalLayout = new HorizontalLayout();
+
+    HorizontalLayout boilVolumeHorizontalLayout = new HorizontalLayout();
+
+    private final Grid<MaltsForInterfaceDto> maltsGrid = new Grid<>(MaltsForInterfaceDto.class);
+
+    private final Grid<HopsForInterfaceDto> hopsGrid = new Grid<>(HopsForInterfaceDto.class);
+
+    private Grid<String> foodPairingsGrid=new Grid<>();
     Binder<BeerDto> binder = new BeanValidationBinder<>(BeerDto.class);
-    public BeerViewForm() {
+
+    BackEndDataManipulatorService backEndDataManipulatorService;
+
+    public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService) {
+        this.backEndDataManipulatorService=backEndDataManipulatorService;
+        yeast.setValue("placeholder");
         brewers_tips.setMaxLength(2000);
         binder.bindInstanceFields(this);
-        add(name,description,image_url, abv,ibu,target_og,ebc,srm,attenuationLevel,volume,boilVolume,brewers_tips,contributed_by,createButtonsLayout());
+        imageUrl = graphicAssets.imageConfig("ph", embeddedHeight, embeddedWidth);
+        textFieldLock(true);
+        add(imageUrl,name, description, abv, ibu, target_og, ebc, srm, attenuationLevel, volume, boilVolume,maltName, getMaltsGrid(),
+                hopsName, getHopsGrid(),getFoodPairingsGrid(),yeast,contributed_by, createButtonsLayout());
     }
-    public void volumeAccordionSetVolume(){
-            volumeAccordionClearVolume();
-            Span volumeData=new Span(""+beerDto.getVolumeDto().getValue()+" "+beerDto.getVolumeDto().getUnit());
-            volumeHorizontalLayout.add(volumeData);
-            volumeHorizontalLayout.setSpacing(false);
-            volumeHorizontalLayout.setPadding(false);
-            volume.add("volume information", volumeHorizontalLayout);
+
+    private void textFieldLock(boolean lockValue) {
+        name.setReadOnly(lockValue);
+        description.setReadOnly(lockValue);
+        abv.setReadOnly(lockValue);
+        ibu.setReadOnly(lockValue);
+        target_og.setReadOnly(lockValue);
+        ebc.setReadOnly(lockValue);
+        srm.setReadOnly(lockValue);
+        attenuationLevel.setReadOnly(lockValue);
+        brewers_tips.setReadOnly(lockValue);
+        contributed_by.setReadOnly(lockValue);
+        yeast.setReadOnly(lockValue);
     }
-    public void volumeAccordionClearVolume(){
-        if (volume.getChildren().findAny().isPresent()){
+
+    public Grid<String> getFoodPairingsGrid() {
+        return foodPairingsGrid;
+    }
+
+    public void setFoodPairingsGrid() {
+        foodPairingsGrid.removeAllColumns();
+        foodPairingsGrid.setItems(beerDto.getFoodPairing());
+        foodPairingsGrid.addColumn(e->e).setHeader("Food Pairings");
+    }
+
+    public Grid<MaltsForInterfaceDto> getMaltsGrid() {
+        return maltsGrid;
+    }
+
+    public Grid<HopsForInterfaceDto> getHopsGrid() {
+        return hopsGrid;
+    }
+
+    public void setMaltsGrid(){
+        maltsGrid.setItems(beerDto.getIngredientsDto().getMaltDtoList().stream()
+                .map(tempMalts -> new MaltsForInterfaceDto(tempMalts.getName(), tempMalts.getAmountDto().getValue(),
+                        tempMalts.getAmountDto().getUnit()))
+                .collect(Collectors.toList()));
+    }
+
+    public void setHopsGrid(){
+        hopsGrid.setItems(beerDto.getIngredientsDto().getHopsDtoList().stream()
+                .map(tempHops -> new HopsForInterfaceDto(tempHops.getName(), tempHops.getAmountDto().getValue(),
+                        tempHops.getAmountDto().getUnit(), tempHops.getAdd(), tempHops.getAttribute()))
+                .collect(Collectors.toList()));
+    }
+
+    public void volumeAccordionSetVolume() {
+        volumeAccordionClearVolume();
+        Span volumeData = new Span("" + beerDto.getVolumeDto().getValue() + " " + beerDto.getVolumeDto().getUnit());
+        volumeHorizontalLayout.add(volumeData);
+        volumeHorizontalLayout.setSpacing(false);
+        volumeHorizontalLayout.setPadding(false);
+        volume.add("volume information", volumeHorizontalLayout);
+    }
+
+    public void volumeAccordionClearVolume() {
+        if (volume.getChildren().findAny().isPresent()) {
             volume.remove(volumeHorizontalLayout);
             volumeHorizontalLayout.removeAll();
         }
     }
 
-    public void boilVolumeAccordionSetVolume(){
+    public void boilVolumeAccordionSetVolume() {
         boilVolumeAccordionClearVolume();
-        Span volumeData=new Span(""+beerDto.getBoilVolumeDto().getValue()+" "+beerDto.getBoilVolumeDto().getUnit());
+        Span volumeData = new Span("" + beerDto.getBoilVolumeDto().getValue() + " " + beerDto.getBoilVolumeDto().getUnit());
         boilVolumeHorizontalLayout.add(volumeData);
         boilVolumeHorizontalLayout.setSpacing(false);
         boilVolumeHorizontalLayout.setPadding(false);
         boilVolume.add("boil volume information", boilVolumeHorizontalLayout);
     }
-    public void boilVolumeAccordionClearVolume(){
-        if (boilVolume.getChildren().findAny().isPresent()){
+
+    public void boilVolumeAccordionClearVolume() {
+        if (boilVolume.getChildren().findAny().isPresent()) {
             boilVolume.remove(boilVolumeHorizontalLayout);
             boilVolumeHorizontalLayout.removeAll();
         }
     }
 
-
-//    public Accordion getBoilVolumeAccordionConfigurator(){
-//
-//    }
-//    public Accordion accordionConfigurator(){
-//
-//    }
     private HorizontalLayout createButtonsLayout() {
         favoritesButton.addClickShortcut(Key.ENTER);
+        favoritesButton.addClickListener(e-> backEndDataManipulatorService.addBeerToFavorites(beerDto.getName()));
+        closeButton.addClickListener(e -> setVisible(false));
         closeButton.addClickShortcut(Key.ESCAPE);
         return new HorizontalLayout(favoritesButton, closeButton);
     }
 
     public void setBeer(BeerDto beer) {
         this.beerDto = beer;
+        if (beer != null) {
+            yeast.setValue(beerDto.getIngredientsDto().getYeast());
+            if (beer.getImageUrl() != null) {
+                imageUrl = graphicAssets.imageConfig(beer.getImageUrl(), embeddedWidth, embeddedHeight);
+            }
+        }
         binder.readBean(beer);
     }
+}
     // Events
-    public static abstract class MealFormEvent extends ComponentEvent<BeerViewForm> {
-        private BeerDto beerDto;
-
-        protected MealFormEvent(BeerViewForm source, BeerDto contact) {
-            super(source, false);
-            this.beerDto = contact;
-        }
-
-        public BeerDto getBeerDto() {
-            return beerDto;
-        }
-    }
-
+//    public static abstract class MealFormEvent extends ComponentEvent<BeerViewForm> {
+//        private BeerDto beerDto;
 //
-//    public static class CloseEvent extends MealFormEvent {
-//        CloseEvent(MealViewForm source) {
-//            super(source, null);
+//        protected MealFormEvent(BeerViewForm source, BeerDto contact) {
+//            super(source, false);
+//            this.beerDto = contact;
+//        }
+//
+//        public BeerDto getBeerDto() {
+//            return beerDto;
 //        }
 //    }
 //
-//    public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
-//                                                                  ComponentEventListener<T> listener) {
-//        return getEventBus().addListener(eventType, listener);
-//    }
-}
+////
+////    public static class CloseEvent extends MealFormEvent {
+////        CloseEvent(MealViewForm source) {
+////            super(source, null);
+////        }
+////    }
+////
+////    public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
+////                                                                  ComponentEventListener<T> listener) {
+////        return getEventBus().addListener(eventType, listener);
+////    }
+//}
