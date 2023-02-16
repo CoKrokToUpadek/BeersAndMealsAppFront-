@@ -67,5 +67,13 @@ public class BackEndDataManipulatorService {
         backendCommunicationClient.addToFavoriteBeerDtoList(beerName);
     }
 
+    public void removeMealFromFavorites(String mealName) {
+        backendCommunicationClient.removeFromFavoriteMealDtoList(mealName);
+    }
+
+    public void removeBeerFromFavorites(String beerName) {
+        backendCommunicationClient.removeFromFavoriteBeerDtoList(beerName);
+    }
+
 
 }

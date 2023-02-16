@@ -11,17 +11,18 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.IFrame;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 
 
-
 import java.util.ArrayList;
 
 
 public class MealViewForm extends FormLayout {
+    MainView parentView;
     private MealDto mealDto;
     private final GraphicAssets graphicAssets = new GraphicAssets();
     private final String phVideo = "https://www.youtube.com/watch?v=NpEaa2P7qZI";
@@ -38,16 +39,15 @@ public class MealViewForm extends FormLayout {
     TextField youtubeLink = new TextField("youtubeLink");
     TextField source = new TextField("source");
 
-
-    Button favoritesButton = new Button("Favorites");
+    Button favoritesButton = new Button("add to favorites");
     Button closeButton = new Button("close");
     private final Grid<IngredientAndMeasureDto> ingredientAndMeasureDtoGrid = new Grid<>(IngredientAndMeasureDto.class);
     Binder<MealDto> binder = new BeanValidationBinder<>(MealDto.class);
-
     BackEndDataManipulatorService backEndDataManipulatorService;
 
-    public MealViewForm(BackEndDataManipulatorService backEndDataManipulatorService) {
-        this.backEndDataManipulatorService=backEndDataManipulatorService;
+    public MealViewForm(BackEndDataManipulatorService backEndDataManipulatorService, MainView parent) {
+        this.parentView = parent;
+        this.backEndDataManipulatorService = backEndDataManipulatorService;
         instruction.setMaxLength(5000);
         binder.bindInstanceFields(this);
         textFieldLock(true);
@@ -55,6 +55,22 @@ public class MealViewForm extends FormLayout {
         thumbnail = graphicAssets.imageConfig("ph", embeddedWidth, embeddedHeight);
         embeddedPlayerConfig(phVideo, embeddedWidth, embeddedHeight);
         add(thumbnail, name, category, area, instruction, tags, getIngredientAndMeasureDtoGrid(), embeddedPlayer, source, createButtonsLayout());
+    }
+
+
+    public void setButtonForAddingToFavorites() {
+        favoritesButton.setText("add to favorites");
+        favoritesButton.addClickListener(e -> {
+            backEndDataManipulatorService.addMealToFavorites(mealDto.getName());
+        });
+    }
+
+    public void setButtonForRemovingFromFavorites() {
+        favoritesButton.setText("remove from favorites");
+        favoritesButton.addClickListener(e -> {
+            backEndDataManipulatorService.removeMealFromFavorites(mealDto.getName());
+            parentView.setMealDtoGridValues(parentView.updateCurrentFavoriteMealList());
+        });
     }
 
     private void textFieldLock(boolean lockValue) {
@@ -81,7 +97,7 @@ public class MealViewForm extends FormLayout {
 
     private HorizontalLayout createButtonsLayout() {
         favoritesButton.addClickShortcut(Key.ENTER);
-        favoritesButton.addClickListener(e-> backEndDataManipulatorService.addMealToFavorites(mealDto.getName()));
+        setButtonForAddingToFavorites();
         closeButton.addClickListener(e -> setVisible(false));
         closeButton.addClickShortcut(Key.ESCAPE);
         return new HorizontalLayout(favoritesButton, closeButton);

@@ -47,5 +47,11 @@ public class Config {
     @Value("${beersandmeals.api.add_favorite_meals}")
     private String addToFavoriteMeals;
 
+    @Value("${beersandmeals.api.remove_from_favorite_beers}")
+    private String removeFromFavoriteBeers;
+
+    @Value("${beersandmeals.api.remove_from_favorite_meals}")
+    private String removeFromFavoriteMeals;
+
 
 }

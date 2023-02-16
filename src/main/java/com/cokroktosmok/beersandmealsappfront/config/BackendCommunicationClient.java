@@ -98,18 +98,31 @@ public class BackendCommunicationClient {
 
     public String addToFavoriteMealDtoList(String meal){
         URI url=buildUriForAddToFavoriteMeals(meal);
-        HttpEntity<String> entity = headersForPost("test");
+        HttpEntity<String> entity = headers();
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
         return response.getBody();
     }
 
     public String addToFavoriteBeerDtoList(String beer){
         URI url=buildUriForAddToFavoriteBeers(beer);
-        HttpEntity<String> entity = headersForPost("test");
+        HttpEntity<String> entity = headers();
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
         return response.getBody();
     }
 
+    public String removeFromFavoriteMealDtoList(String meal){
+        URI url=buildUriForRemoveFromFavoriteMeals(meal);
+        HttpEntity<String> entity = headers();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
+        return response.getBody();
+    }
+
+    public String removeFromFavoriteBeerDtoList(String beer){
+        URI url=buildUriForRemoveFromFavoriteBeers(beer);
+        HttpEntity<String> entity = headers();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
+        return response.getBody();
+    }
 
 
     private URI buildUriForAllMeals() {
@@ -201,6 +214,26 @@ public class BackendCommunicationClient {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
                 .pathSegment(beerConfig.getUserFunctionalities())
                 .pathSegment(beerConfig.getAddToFavoriteBeers())
+                .queryParam("beerName",beer)
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForRemoveFromFavoriteMeals(String meal) {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getUserFunctionalities())
+                .pathSegment(beerConfig.getRemoveFromFavoriteMeals())
+                .queryParam("mealName",meal)
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForRemoveFromFavoriteBeers(String beer) {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getUserFunctionalities())
+                .pathSegment(beerConfig.getRemoveFromFavoriteBeers())
                 .queryParam("beerName",beer)
                 .build()
                 .encode()

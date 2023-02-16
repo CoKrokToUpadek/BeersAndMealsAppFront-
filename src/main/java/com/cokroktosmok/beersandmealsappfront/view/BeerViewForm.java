@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 public class BeerViewForm extends FormLayout {
 
+    private MainView parentView;
     private final int embeddedHeight = 400;
     private final int embeddedWidth = 200;
     private final GraphicAssets graphicAssets = new GraphicAssets();
@@ -44,7 +45,7 @@ public class BeerViewForm extends FormLayout {
 
     TextArea brewers_tips = new TextArea("brewers_tips");
     TextField contributed_by = new TextField("contributed_by");
-    Button favoritesButton = new Button("Favorites");
+    Button favoritesButton = new Button("favorites");//placeholder
     Button closeButton = new Button("close");
 
     Span maltName=new Span("Malts list");
@@ -66,7 +67,8 @@ public class BeerViewForm extends FormLayout {
 
     BackEndDataManipulatorService backEndDataManipulatorService;
 
-    public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService) {
+    public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService,MainView parent) {
+        this.parentView=parent;
         this.backEndDataManipulatorService=backEndDataManipulatorService;
         yeast.setValue("placeholder");
         brewers_tips.setMaxLength(2000);
@@ -76,6 +78,23 @@ public class BeerViewForm extends FormLayout {
         add(imageUrl,name, description, abv, ibu, target_og, ebc, srm, attenuationLevel, volume, boilVolume,maltName, getMaltsGrid(),
                 hopsName, getHopsGrid(),getFoodPairingsGrid(),yeast,contributed_by, createButtonsLayout());
     }
+
+    public void setButtonForAddingToFavorites(){
+        favoritesButton.setText("add to favorites");
+        favoritesButton.addClickListener(e-> {
+            backEndDataManipulatorService.addBeerToFavorites(beerDto.getName());
+        });
+    }
+
+    public void setButtonForRemovingFromFavorites(){
+        favoritesButton.setText("remove from favorites");
+        favoritesButton.addClickListener(e->{
+            backEndDataManipulatorService.removeBeerFromFavorites(beerDto.getName());
+            parentView.setBeerDtoGridValues(parentView.updateCurrentFavoriteBeerList());
+        });
+
+    }
+
 
     private void textFieldLock(boolean lockValue) {
         name.setReadOnly(lockValue);
@@ -156,8 +175,9 @@ public class BeerViewForm extends FormLayout {
     }
 
     private HorizontalLayout createButtonsLayout() {
+        //default behavior
+        setButtonForAddingToFavorites();
         favoritesButton.addClickShortcut(Key.ENTER);
-        favoritesButton.addClickListener(e-> backEndDataManipulatorService.addBeerToFavorites(beerDto.getName()));
         closeButton.addClickListener(e -> setVisible(false));
         closeButton.addClickShortcut(Key.ESCAPE);
         return new HorizontalLayout(favoritesButton, closeButton);
