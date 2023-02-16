@@ -22,10 +22,6 @@ public class TeaPotCodeInterceptor  implements ClientHttpRequestInterceptor {
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
         ClientHttpResponse response = execution.execute(request, body);
-//        if (response.getStatusCode().equals(statusCodes) || response.getStatusCode().equals(HttpStatus.UNAUTHORIZED)) {
-//            VaadinSession.getCurrent().getSession().invalidate();
-//            UI.getCurrent().navigate("login");
-//        }
         statusCodes.forEach(e-> {
             try {
                 if (response.getStatusCode().equals(e)){
