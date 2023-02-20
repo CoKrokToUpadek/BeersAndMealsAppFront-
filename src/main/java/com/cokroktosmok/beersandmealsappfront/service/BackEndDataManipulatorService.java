@@ -21,6 +21,13 @@ public class BackEndDataManipulatorService {
         this.backendCommunicationClient = backendCommunicationClient;
     }
 
+    public List<String> updateRecipesDb(){
+        return backendCommunicationClient.updateRecipesDb();
+    }
+    public List<String> clearRecipesDb(){
+        return backendCommunicationClient.clearRecipesDb();
+    }
+
     public List<MealDto> findAllMeals(String stringFilter) {
         mealDtoList = backendCommunicationClient.getMealDtoList();
         if (stringFilter == null || stringFilter.isEmpty()) {

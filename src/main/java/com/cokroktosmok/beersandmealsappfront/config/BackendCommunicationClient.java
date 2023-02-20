@@ -8,11 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -50,14 +52,14 @@ public class BackendCommunicationClient {
         return entity;
     }
 
-    private HttpEntity<String> headersForPost(String argument) {
-        String holder = SecurityContextHolder.getContext().getAuthentication().getName();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(TokenStorage.getToken(holder));
-        HttpEntity<String> entity = new HttpEntity<>(argument,headers);
-        return entity;
-    }
+//    private HttpEntity<String> headersForPost(String argument) {
+//        String holder = SecurityContextHolder.getContext().getAuthentication().getName();
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.setBearerAuth(TokenStorage.getToken(holder));
+//        HttpEntity<String> entity = new HttpEntity<>(argument,headers);
+//        return entity;
+//    }
 
     public ResponseEntity<Boolean> checkIfLoginIsTaken(String login) {
         URI url = buildUriForCheckIfLoginIsTaken(login);
@@ -78,9 +80,34 @@ public class BackendCommunicationClient {
     public List<MealDto> getMealDtoList() {
         URI url = buildUriForAllMeals();
         HttpEntity<String> entity = headers();
-        ResponseEntity<MealDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, MealDto[].class);
-        return Arrays.asList(response.getBody());
+        try {
+            ResponseEntity<MealDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, MealDto[].class);
+            return Arrays.asList(response.getBody());
+        }catch (HttpClientErrorException e){
+            return new ArrayList<>();/*TODO change behavior based on response type (list or String)*/
+        }
     }
+    //simplified for doing both db's at the same time
+    public List<String> updateRecipesDb(){
+        URI url0=buildUriForUpdatingBeerDb();
+        URI url1=buildUriForUpdatingMealDb();
+        HttpEntity<String> entity = headers();
+        ResponseEntity<String> response0 = restTemplate.exchange(url0, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response1 = restTemplate.exchange(url1, HttpMethod.POST, entity, String.class);
+        return Arrays.asList(response0.getBody(),response1.getBody());
+    }
+
+    public List<String> clearRecipesDb(){
+        URI url0=buildUriForClearingBeerDb();
+        URI url1=buildUriForClearingMealDb();
+        HttpEntity<String> entity = headers();
+        ResponseEntity<String> response0 = restTemplate.exchange(url0, HttpMethod.DELETE, entity, String.class);
+        ResponseEntity<String> response1 = restTemplate.exchange(url1, HttpMethod.DELETE, entity, String.class);
+        return Arrays.asList(response0.getBody(),response1.getBody());
+    }
+
+
+
 
     public List<MealDto> getFavoriteMealDtoList(){
         URI url=buildUriForFavoriteMeals();
@@ -125,27 +152,33 @@ public class BackendCommunicationClient {
     }
 
 
-    private URI buildUriForAllMeals() {
-        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
-                .pathSegment(beerConfig.getUserFunctionalities())
-                .pathSegment(beerConfig.getGetMeals())
-                .build()
-                .encode()
-                .toUri();
-    }
+
 
 
     public List<BeerDto> getBeerDtoList() {
         URI url = buildUriForAllBeers();
         HttpEntity<String> entity = headers();
-        ResponseEntity<BeerDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, BeerDto[].class);
-        return Arrays.asList(response.getBody());
+        try {
+            ResponseEntity<BeerDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, BeerDto[].class);
+            return Arrays.asList(response.getBody());
+        }catch (HttpClientErrorException e){
+            return new ArrayList<>();/*TODO change behavior based on response type (list or String)*/
+        }
     }
 
     private URI buildUriForAllBeers() {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
                 .pathSegment(beerConfig.getUserFunctionalities())
                 .pathSegment(beerConfig.getGetBeers())
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForAllMeals() {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getUserFunctionalities())
+                .pathSegment(beerConfig.getGetMeals())
                 .build()
                 .encode()
                 .toUri();
@@ -239,5 +272,40 @@ public class BackendCommunicationClient {
                 .encode()
                 .toUri();
     }
+
+    private URI buildUriForClearingBeerDb() {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getClearBeerDb())
+                .build()
+                .encode()
+                .toUri();
+    }
+    private URI buildUriForClearingMealDb() {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getClearMealDb())
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForUpdatingBeerDb() {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getUpdateBeerDb())
+                .build()
+                .encode()
+                .toUri();
+    }
+    private URI buildUriForUpdatingMealDb() {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getUpdateMealDb())
+                .build()
+                .encode()
+                .toUri();
+    }
+
 
 }

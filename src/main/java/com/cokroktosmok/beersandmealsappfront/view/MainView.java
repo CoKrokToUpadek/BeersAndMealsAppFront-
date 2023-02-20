@@ -15,6 +15,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 
 import javax.annotation.security.PermitAll;
@@ -30,17 +31,20 @@ public class MainView extends VerticalLayout {
     private final Grid<BeerDto> beerDtoGrid=new Grid<>(BeerDto.class);
     TextField filterBeerText = new TextField();
     TextField filterMealText = new TextField();
-
     MealViewForm mealViewForm;
 
     BeerViewForm beerViewForm;
     BackEndDataManipulatorService backEndDataManipulatorService;
 
+   private boolean isAdmin;
+
     @Autowired
     public MainView(BackEndDataManipulatorService backEndDataManipulatorService) {
+        //If I try to get SecurityContextHolder without It being wrapped in function, the content is null (have no idea why)
+        setAdmin();
         this.backEndDataManipulatorService=backEndDataManipulatorService;
-        this.mealViewForm = new MealViewForm(this.backEndDataManipulatorService,this);
-        this.beerViewForm=new BeerViewForm(this.backEndDataManipulatorService,this);
+        this.mealViewForm = new MealViewForm(this.backEndDataManipulatorService,this,isAdmin);
+        this.beerViewForm=new BeerViewForm(this.backEndDataManipulatorService,this,isAdmin);
         add(buttons());
         add(getGridsLayout());
         configureMealViewForm();
@@ -61,10 +65,22 @@ public class MainView extends VerticalLayout {
         return toolbar;
     }
 
+    private void setAdmin(){
+        isAdmin = SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .anyMatch(grantedAuthority -> "ROLE_ADMIN".equals(grantedAuthority.getAuthority()));
+    }
+
     private HorizontalLayout buttons(){
         Button logout = new Button("Log out",e-> UI.getCurrent().navigate("/login"));
         Button favorites = new Button("favorites lists",e->setFavoriteLists());
         Button defaultList = new Button("beers and meals lists",e->setDefaultLists());
+
+        if (isAdmin){
+            Button admin = new Button("users panel" /*TODO admin panel implementation and pathing*/);
+            Button updateDb = new Button("update local recipes db" ,e->updateRecipesDb());
+            Button clearDb = new Button("remove all recipes from db" ,e->clearRecipesDb());
+            return new HorizontalLayout(logout,defaultList,favorites,admin,updateDb,clearDb);
+        }
         return new HorizontalLayout(logout,defaultList,favorites);
     }
 
@@ -133,6 +149,16 @@ public class MainView extends VerticalLayout {
 
     public List<MealDto> updateCurrentFavoriteMealList(){
         return backEndDataManipulatorService.findFavoriteMeals(null);
+    }
+
+    public void clearRecipesDb(){
+        backEndDataManipulatorService.clearRecipesDb();
+        setDefaultLists();
+    }
+
+    public void updateRecipesDb(){
+        backEndDataManipulatorService.updateRecipesDb();
+        setDefaultLists();
     }
 
 
