@@ -54,6 +54,8 @@ public class BeerViewForm extends FormLayout {
 
     TextField yeast=new TextField("Yeast");
 
+    Button deleteButton=new Button();
+
     HorizontalLayout volumeHorizontalLayout = new HorizontalLayout();
 
     HorizontalLayout boilVolumeHorizontalLayout = new HorizontalLayout();
@@ -66,8 +68,9 @@ public class BeerViewForm extends FormLayout {
     Binder<BeerDto> binder = new BeanValidationBinder<>(BeerDto.class);
 
     BackEndDataManipulatorService backEndDataManipulatorService;
-
-    public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService,MainView parent) {
+    boolean isAdmin;
+    public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService,MainView parent,boolean isAdmin) {
+        this.isAdmin=isAdmin;
         this.parentView=parent;
         this.backEndDataManipulatorService=backEndDataManipulatorService;
         yeast.setValue("placeholder");
@@ -77,6 +80,9 @@ public class BeerViewForm extends FormLayout {
         textFieldLock(true);
         add(imageUrl,name, description, abv, ibu, target_og, ebc, srm, attenuationLevel, volume, boilVolume,maltName, getMaltsGrid(),
                 hopsName, getHopsGrid(),getFoodPairingsGrid(),yeast,contributed_by, createButtonsLayout());
+    }
+    private void setButtonForRemovingRecipeFromDb(){
+        deleteButton.setText("delete recipe from Db");
     }
 
     public void setButtonForAddingToFavorites(){
@@ -180,6 +186,10 @@ public class BeerViewForm extends FormLayout {
         favoritesButton.addClickShortcut(Key.ENTER);
         closeButton.addClickListener(e -> setVisible(false));
         closeButton.addClickShortcut(Key.ESCAPE);
+        if (isAdmin){
+            setButtonForRemovingRecipeFromDb();
+            return new HorizontalLayout(favoritesButton, closeButton,deleteButton);
+        }
         return new HorizontalLayout(favoritesButton, closeButton);
     }
 

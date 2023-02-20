@@ -11,7 +11,6 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.IFrame;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -45,7 +44,11 @@ public class MealViewForm extends FormLayout {
     Binder<MealDto> binder = new BeanValidationBinder<>(MealDto.class);
     BackEndDataManipulatorService backEndDataManipulatorService;
 
-    public MealViewForm(BackEndDataManipulatorService backEndDataManipulatorService, MainView parent) {
+    Button deleteButton=new Button();
+
+    boolean isAdmin;
+    public MealViewForm(BackEndDataManipulatorService backEndDataManipulatorService, MainView parent,boolean isAdmin) {
+        this.isAdmin=isAdmin;
         this.parentView = parent;
         this.backEndDataManipulatorService = backEndDataManipulatorService;
         instruction.setMaxLength(5000);
@@ -56,7 +59,9 @@ public class MealViewForm extends FormLayout {
         embeddedPlayerConfig(phVideo, embeddedWidth, embeddedHeight);
         add(thumbnail, name, category, area, instruction, tags, getIngredientAndMeasureDtoGrid(), embeddedPlayer, source, createButtonsLayout());
     }
-
+    private void setButtonForRemovingRecipeFromDb(){
+        deleteButton.setText("delete recipe from Db");
+    }
 
     public void setButtonForAddingToFavorites() {
         favoritesButton.setText("add to favorites");
@@ -100,6 +105,10 @@ public class MealViewForm extends FormLayout {
         setButtonForAddingToFavorites();
         closeButton.addClickListener(e -> setVisible(false));
         closeButton.addClickShortcut(Key.ESCAPE);
+        if (isAdmin){
+            setButtonForRemovingRecipeFromDb();
+            return new HorizontalLayout(favoritesButton, closeButton,deleteButton);
+        }
         return new HorizontalLayout(favoritesButton, closeButton);
     }
 
