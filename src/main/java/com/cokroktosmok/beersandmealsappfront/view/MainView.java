@@ -3,6 +3,7 @@ package com.cokroktosmok.beersandmealsappfront.view;
 import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
 
+import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserDto;
 import com.cokroktosmok.beersandmealsappfront.service.BackEndDataManipulatorService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -29,10 +30,13 @@ public class MainView extends VerticalLayout {
 
     private final Grid<MealDto> mealDtoGrid = new Grid<>(MealDto.class);
     private final Grid<BeerDto> beerDtoGrid=new Grid<>(BeerDto.class);
+
+    private final Grid<UserDto> usersDtoGrid=new Grid<>(UserDto.class);
     TextField filterBeerText = new TextField();
     TextField filterMealText = new TextField();
-    MealViewForm mealViewForm;
 
+    TextField filterUsersText=new TextField();
+    MealViewForm mealViewForm;
     BeerViewForm beerViewForm;
     BackEndDataManipulatorService backEndDataManipulatorService;
 
@@ -46,7 +50,7 @@ public class MainView extends VerticalLayout {
         this.mealViewForm = new MealViewForm(this.backEndDataManipulatorService,this,isAdmin);
         this.beerViewForm=new BeerViewForm(this.backEndDataManipulatorService,this,isAdmin);
         add(buttons());
-        add(getGridsLayout());
+        add(beersAndMealsLayoutBuilder());
         configureMealViewForm();
         configureBeerViewForm();
         setSizeFull();
@@ -84,18 +88,25 @@ public class MainView extends VerticalLayout {
         return new HorizontalLayout(logout,defaultList,favorites);
     }
 
-    private HorizontalLayout getGridsLayout(){
+    private HorizontalLayout beersAndMealsLayoutBuilder(){
         HorizontalLayout grids= new HorizontalLayout();
         grids.add(beerViewForm);
-        grids.add(getBeerLayout(backEndDataManipulatorService));
-        grids.add(getMealsLayout(backEndDataManipulatorService));
+        grids.add(beersLayoutBuilder(backEndDataManipulatorService));
+        grids.add(mealsLayoutBuilder(backEndDataManipulatorService));
         grids.add(mealViewForm);
         grids.setSizeFull();
         return grids;
     }
 
+    private HorizontalLayout usersLayoutBuilder(BackEndDataManipulatorService backEndDataManipulatorService){
+        HorizontalLayout usersLayout = new HorizontalLayout();
+        usersLayout.add();
+        usersLayout.add(usersDtoGrid);
+        return usersLayout;
+    }
 
-    private VerticalLayout getMealsLayout(BackEndDataManipulatorService backEndDataManipulatorService){
+
+    private VerticalLayout mealsLayoutBuilder(BackEndDataManipulatorService backEndDataManipulatorService){
         VerticalLayout mealsLayout=new VerticalLayout();
         filterMealText.addValueChangeListener(e-> updateMealList());
         mealsLayout.add(getToolbar(filterMealText));
@@ -108,7 +119,7 @@ public class MainView extends VerticalLayout {
         return mealsLayout;
     }
 
-    private VerticalLayout getBeerLayout(BackEndDataManipulatorService backEndDataManipulatorService){
+    private VerticalLayout beersLayoutBuilder(BackEndDataManipulatorService backEndDataManipulatorService){
         VerticalLayout beersLayout=new VerticalLayout();
         filterBeerText.addValueChangeListener(e-> updateBeerList());
         beersLayout.add(getToolbar(filterBeerText));
