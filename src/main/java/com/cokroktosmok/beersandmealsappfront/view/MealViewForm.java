@@ -138,29 +138,4 @@ public class MealViewForm extends FormLayout {
         ingredientAndMeasureDtoGrid.setItems(new ArrayList<>());
     }
 }
-//    // Events
-//    public static abstract class MealFormEvent extends ComponentEvent<MealViewForm> {
-//        private MealDto mealDto;
-//
-//        protected MealFormEvent(MealViewForm source, MealDto contact) {
-//            super(source, false);
-//            this.mealDto = contact;
-//        }
-//
-//        public MealDto getMealDto() {
-//            return mealDto;
-//        }
-//    }
-//
-////
-////    public static class CloseEvent extends MealFormEvent {
-////        CloseEvent(MealViewForm source) {
-////            super(source, null);
-////        }
-////    }
-////
-////    public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
-////                                                                  ComponentEventListener<T> listener) {
-////        return getEventBus().addListener(eventType, listener);
-////    }
-//}
+

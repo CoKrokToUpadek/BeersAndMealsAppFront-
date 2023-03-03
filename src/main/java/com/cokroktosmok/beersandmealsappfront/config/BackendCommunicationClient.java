@@ -4,6 +4,7 @@ import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.user.CreatedUserDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserCredentialsDto;
+import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -75,6 +76,17 @@ public class BackendCommunicationClient {
         URI url = buildUriForLogin(login);
         UserCredentialsDto user = restTemplate.getForObject(url, UserCredentialsDto.class);
         return Optional.of(user);
+    }
+
+    public List<UserDto> getUserDtoList() {
+        URI url = buildUriForAllUsers();
+        HttpEntity<String> entity = headers();
+        try {
+            ResponseEntity<UserDto[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, UserDto[].class);
+            return Arrays.asList(response.getBody());
+        }catch (HttpClientErrorException e){
+            return new ArrayList<>();
+        }
     }
 
     public List<MealDto> getMealDtoList() {
@@ -166,6 +178,45 @@ public class BackendCommunicationClient {
         }
     }
 
+    public String changeUserRole(String login, String role) {
+        URI url = buildUriForChangingUserRole(login,role);
+        HttpEntity<String> entity = headers();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+        return response.getBody();
+    }
+
+    public String changeUserStatus(String login, Integer status) {
+        URI url = buildUriForChangingUserStatus(login,status);
+        HttpEntity<String> entity = headers();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
+        return response.getBody();
+    }
+
+
+    private URI buildUriForChangingUserStatus(String login,Integer status) {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getChangeUserStatus())
+                .queryParam("login",login)
+                .queryParam("status",status)
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForChangingUserRole(String login,String role) {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getChangeUserRole())
+                .queryParam("login",login)
+                .queryParam("role",role)
+                .build()
+                .encode()
+                .toUri();
+    }
+
+
+
     private URI buildUriForAllBeers() {
         return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
                 .pathSegment(beerConfig.getUserFunctionalities())
@@ -200,6 +251,15 @@ public class BackendCommunicationClient {
                 .pathSegment(beerConfig.getUserFunctionalities())
                 .pathSegment(beerConfig.getLogin())
                 .queryParam("login", login)
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForAllUsers() {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getGetUsers())
                 .build()
                 .encode()
                 .toUri();
@@ -306,6 +366,7 @@ public class BackendCommunicationClient {
                 .encode()
                 .toUri();
     }
+
 
 
 }

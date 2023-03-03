@@ -3,6 +3,7 @@ package com.cokroktosmok.beersandmealsappfront.service;
 import com.cokroktosmok.beersandmealsappfront.config.BackendCommunicationClient;
 import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
+import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,9 +12,11 @@ import java.util.stream.Collectors;
 
 @Service
 public class BackEndDataManipulatorService {
-    BackendCommunicationClient backendCommunicationClient;
-    List<MealDto> mealDtoList;
-    List<BeerDto> beerDtoList;
+  private   BackendCommunicationClient backendCommunicationClient;
+   private List<MealDto> mealDtoList;
+    private   List<BeerDto> beerDtoList;
+
+    private List<UserDto> userDtoList;
 
 
     @Autowired
@@ -82,5 +85,21 @@ public class BackEndDataManipulatorService {
         backendCommunicationClient.removeFromFavoriteBeerDtoList(beerName);
     }
 
+    public List<UserDto> findAllUsers(String stringFilter){
+        userDtoList = backendCommunicationClient.getUserDtoList();
+        if (stringFilter == null || stringFilter.isEmpty()) {
+            return userDtoList;
+        } else {
+            return userDtoList.stream().filter(e -> e.getLogin().toLowerCase().contains(stringFilter.toLowerCase())).collect(Collectors.toList());
+        }
+    }
+
+    public void setUserRole(String login, String role){
+        String response=backendCommunicationClient.changeUserRole(login,role);
+    }
+
+    public void setUserStatus(String login, Integer status){
+        String response=backendCommunicationClient.changeUserStatus(login,status);
+    }
 
 }

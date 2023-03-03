@@ -29,6 +29,15 @@ public class Config {
     @Value("${beersandmeals.api.user_login}")
     private String login;
 
+    @Value("${beersandmeals.api.get_users}")
+    private String getUsers;
+
+    @Value("${beersandmeals.api.set_user_role}")
+    private String changeUserRole;
+
+    @Value("${beersandmeals.api.set_user_status}")
+    private String changeUserStatus;
+
     @Value("${beersandmeals.api.add_meal_to_favorites}")
     private String addToMealToFavorites;
 

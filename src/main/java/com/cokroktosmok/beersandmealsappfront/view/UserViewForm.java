@@ -1,10 +1,13 @@
 package com.cokroktosmok.beersandmealsappfront.view;
 
 
+import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserDto;
 import com.cokroktosmok.beersandmealsappfront.service.BackEndDataManipulatorService;
+import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -15,6 +18,10 @@ import java.util.List;
 
 public class UserViewForm extends FormLayout {
 
+    public enum statusEnum{
+        inactive,active
+    }
+
     MainView parentView;
     private UserDto userDto;
     TextField id = new TextField("ID");
@@ -24,31 +31,33 @@ public class UserViewForm extends FormLayout {
     TextField email = new TextField("Email");
     TextField login = new TextField("Login");
     TextField userRole = new TextField("User Role");
-    TextField creationDate = new TextField("Creation Date");
+    DatePicker creationDate = new DatePicker("Creation Date");
     TextField status = new TextField("Status (1 for active,0 for inactive)");
 
     ComboBox<String> rolesComboBox = new ComboBox<>("change user roles");
-    ComboBox<String> statusComboBox = new ComboBox<>("change user status");
+    ComboBox<statusEnum> statusComboBox = new ComboBox<>("change user status");
 
     List<String> rolesList=List.of("user","admin");
-    List<String> statusList=List.of("active","inactive");
-
     Button applyChanges = new Button("apply changes");
     Button closeButton = new Button("close");
 
     Binder<UserDto> binder = new BeanValidationBinder<>(UserDto.class);
     BackEndDataManipulatorService backEndDataManipulatorService;
 
-    public UserViewForm(MainView parentView, BackEndDataManipulatorService backEndDataManipulatorService) {
+    public UserViewForm(BackEndDataManipulatorService backEndDataManipulatorService,MainView parentView) {
         this.parentView = parentView;
         this.backEndDataManipulatorService = backEndDataManipulatorService;
+        binder.bindInstanceFields(this);
+        textFieldLock(true);
         populateComboBoxes();
         add(id,firstName,lastName,address,email,login,creationDate,userRole,status,comboBoxesLayout(),buttonsLayout());
     }
 
     private void populateComboBoxes(){
         rolesComboBox.setItems(rolesList);
-        statusComboBox.setItems(statusList);
+        rolesComboBox.setValue(rolesList.get(0));
+        statusComboBox.setItems(statusEnum.values());
+        statusComboBox.setValue(statusEnum.active);
     }
 
     private HorizontalLayout comboBoxesLayout(){
@@ -60,9 +69,19 @@ public class UserViewForm extends FormLayout {
 
     private HorizontalLayout buttonsLayout(){
         HorizontalLayout layout=new HorizontalLayout();
+        closeButton.addClickListener(e -> setVisible(false));
+        closeButton.addClickShortcut(Key.ESCAPE);
+        applyChanges.addClickListener(e->modifyUserValues());
+        applyChanges.addClickShortcut(Key.ENTER);
         layout.add(applyChanges);
         layout.add(closeButton);
         return layout;
+    }
+
+    private void modifyUserValues() {
+            backEndDataManipulatorService.setUserRole(login.getValue(),rolesComboBox.getValue());
+            backEndDataManipulatorService.setUserStatus(login.getValue(),statusComboBox.getValue().ordinal());
+            parentView.setUserDtoGridValues(parentView.updateUsersList());
     }
 
     private void textFieldLock(boolean lockValue) {
@@ -74,7 +93,14 @@ public class UserViewForm extends FormLayout {
         login.setReadOnly(lockValue);
         userRole.setReadOnly(lockValue);
         creationDate.setReadOnly(lockValue);
-        statusComboBox.setReadOnly(lockValue);
+        status.setReadOnly(lockValue);
+        statusComboBox.isReadOnly();
+        rolesComboBox.isReadOnly();
+    }
+
+    public void setUser(UserDto user) {
+        this.userDto = user;
+        binder.readBean(user);
     }
 
 }
