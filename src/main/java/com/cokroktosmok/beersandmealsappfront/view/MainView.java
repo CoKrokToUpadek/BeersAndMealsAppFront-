@@ -3,6 +3,7 @@ package com.cokroktosmok.beersandmealsappfront.view;
 import com.cokroktosmok.beersandmealsappfront.data.dto.beer.BeerDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
 
+import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserDto;
 import com.cokroktosmok.beersandmealsappfront.service.BackEndDataManipulatorService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
@@ -29,12 +30,19 @@ public class MainView extends VerticalLayout {
 
     private final Grid<MealDto> mealDtoGrid = new Grid<>(MealDto.class);
     private final Grid<BeerDto> beerDtoGrid=new Grid<>(BeerDto.class);
+
+    private final Grid<UserDto> usersDtoGrid=new Grid<>(UserDto.class);
     TextField filterBeerText = new TextField();
     TextField filterMealText = new TextField();
-    MealViewForm mealViewForm;
 
+    TextField filterUsersText=new TextField();
+    MealViewForm mealViewForm;
     BeerViewForm beerViewForm;
+
+    UserViewForm userViewForm;
     BackEndDataManipulatorService backEndDataManipulatorService;
+
+    HorizontalLayout currentlyDisplayedLayout;
 
    private boolean isAdmin;
 
@@ -45,13 +53,19 @@ public class MainView extends VerticalLayout {
         this.backEndDataManipulatorService=backEndDataManipulatorService;
         this.mealViewForm = new MealViewForm(this.backEndDataManipulatorService,this,isAdmin);
         this.beerViewForm=new BeerViewForm(this.backEndDataManipulatorService,this,isAdmin);
+        //this functionality can be accessed only when some 1 is admin so there is no point in checking it here again
+        this.userViewForm=new UserViewForm(this.backEndDataManipulatorService,this);
         add(buttons());
-        add(getGridsLayout());
+        //default value
+        this.currentlyDisplayedLayout=beersAndMealsLayoutBuilder();
+        add(currentlyDisplayedLayout);
         configureMealViewForm();
         configureBeerViewForm();
+        configureUserViewForm();
         setSizeFull();
         mealViewForm.setVisible(false);
         beerViewForm.setVisible(false);
+        userViewForm.setVisible(false);
     }
 
 
@@ -72,11 +86,10 @@ public class MainView extends VerticalLayout {
 
     private HorizontalLayout buttons(){
         Button logout = new Button("Log out",e-> UI.getCurrent().navigate("/login"));
-        Button favorites = new Button("favorites lists",e->setFavoriteLists());
-        Button defaultList = new Button("beers and meals lists",e->setDefaultLists());
-
+        Button favorites = new Button("favorites lists",e-> setLayoutToFavorites());
+        Button defaultList = new Button("beers and meals lists",e-> setLayoutToBeersAndMeals());
         if (isAdmin){
-            Button admin = new Button("users panel" /*TODO admin panel implementation and pathing*/);
+            Button admin = new Button("users panel" ,e->setLayoutToUsers());
             Button updateDb = new Button("update local recipes db" ,e->updateRecipesDb());
             Button clearDb = new Button("remove all recipes from db" ,e->clearRecipesDb());
             return new HorizontalLayout(logout,defaultList,favorites,admin,updateDb,clearDb);
@@ -84,18 +97,41 @@ public class MainView extends VerticalLayout {
         return new HorizontalLayout(logout,defaultList,favorites);
     }
 
-    private HorizontalLayout getGridsLayout(){
+    private HorizontalLayout beersAndMealsLayoutBuilder(){
         HorizontalLayout grids= new HorizontalLayout();
         grids.add(beerViewForm);
-        grids.add(getBeerLayout(backEndDataManipulatorService));
-        grids.add(getMealsLayout(backEndDataManipulatorService));
+        grids.add(populateBeersLayout(backEndDataManipulatorService));
+        grids.add(populateMealsLayout(backEndDataManipulatorService));
         grids.add(mealViewForm);
         grids.setSizeFull();
         return grids;
     }
 
+    private HorizontalLayout usersLayoutBuilder(){
+        HorizontalLayout grids = new HorizontalLayout();
+        grids.add(populateUsersLayout(backEndDataManipulatorService));
+        grids.add(userViewForm);
+        grids.setSizeFull();
+        return grids;
+    }
 
-    private VerticalLayout getMealsLayout(BackEndDataManipulatorService backEndDataManipulatorService){
+    private VerticalLayout populateUsersLayout(BackEndDataManipulatorService backEndDataManipulatorService){
+        VerticalLayout usersLayout=new VerticalLayout();
+        filterMealText.addValueChangeListener(e-> updateUserList());
+        usersLayout.add(getToolbar(filterUsersText));
+        usersDtoGrid.setColumns("login","firstName","lastName");
+        usersDtoGrid.setAllRowsVisible(false);
+        usersLayout.add(usersDtoGrid);
+        List<UserDto> usersDtoList= backEndDataManipulatorService.findAllUsers(null);
+        usersDtoGrid.setItems(usersDtoList);
+        usersDtoGrid.asSingleSelect().addValueChangeListener(event -> editUser(event.getValue()));
+        return usersLayout;
+
+    }
+
+
+
+    private VerticalLayout populateMealsLayout(BackEndDataManipulatorService backEndDataManipulatorService){
         VerticalLayout mealsLayout=new VerticalLayout();
         filterMealText.addValueChangeListener(e-> updateMealList());
         mealsLayout.add(getToolbar(filterMealText));
@@ -108,7 +144,7 @@ public class MainView extends VerticalLayout {
         return mealsLayout;
     }
 
-    private VerticalLayout getBeerLayout(BackEndDataManipulatorService backEndDataManipulatorService){
+    private VerticalLayout populateBeersLayout(BackEndDataManipulatorService backEndDataManipulatorService){
         VerticalLayout beersLayout=new VerticalLayout();
         filterBeerText.addValueChangeListener(e-> updateBeerList());
         beersLayout.add(getToolbar(filterBeerText));
@@ -121,8 +157,15 @@ public class MainView extends VerticalLayout {
         return beersLayout;
     }
 
+    private void setLayoutToUsers(){
+        currentlyDisplayedLayout.removeAll();
+        currentlyDisplayedLayout.add(usersLayoutBuilder());
+    }
 
-    private void setDefaultLists(){
+
+    private void setLayoutToBeersAndMeals(){
+        currentlyDisplayedLayout.removeAll();
+        currentlyDisplayedLayout.add(beersAndMealsLayoutBuilder());
         List<BeerDto> beerDtoList=backEndDataManipulatorService.findAllBeers(null);
         List<MealDto> mealDtoList=backEndDataManipulatorService.findAllMeals(null);
         beerDtoGrid.setItems(beerDtoList);
@@ -133,8 +176,9 @@ public class MainView extends VerticalLayout {
 
 
 
-
-    private void setFavoriteLists(){
+    private void setLayoutToFavorites(){
+        currentlyDisplayedLayout.removeAll();
+        currentlyDisplayedLayout.add(beersAndMealsLayoutBuilder());
         List<BeerDto> beerDtoList=  updateCurrentFavoriteBeerList();
         List<MealDto> mealDtoList= updateCurrentFavoriteMealList();
         beerDtoGrid.setItems(beerDtoList);
@@ -151,14 +195,18 @@ public class MainView extends VerticalLayout {
         return backEndDataManipulatorService.findFavoriteMeals(null);
     }
 
+    public List<UserDto> updateUsersList(){
+        return backEndDataManipulatorService.findAllUsers(null);
+    }
+
     public void clearRecipesDb(){
         backEndDataManipulatorService.clearRecipesDb();
-        setDefaultLists();
+        setLayoutToBeersAndMeals();
     }
 
     public void updateRecipesDb(){
         backEndDataManipulatorService.updateRecipesDb();
-        setDefaultLists();
+        setLayoutToBeersAndMeals();
     }
 
 
@@ -173,6 +221,19 @@ public class MainView extends VerticalLayout {
             mealViewForm.setIngredientsList();
             mealViewForm.setVisible(true);
         }
+    }
+
+    public void editUser(UserDto userDto) {
+        if (userDto == null) {
+            closeUserEditor();
+        } else {
+            userViewForm.setUser(userDto);
+            userViewForm.setVisible(true);
+        }
+    }
+
+    private void configureUserViewForm(){
+
     }
 
     private void configureBeerViewForm(){
@@ -201,11 +262,20 @@ public class MainView extends VerticalLayout {
         mealDtoGrid.setItems(backEndDataManipulatorService.findAllMeals(filterMealText.getValue()));
     }
 
+    private void updateUserList() {
+        usersDtoGrid.setItems(backEndDataManipulatorService.findAllUsers(filterUsersText.getValue()));
+    }
+
     private void closeMealEditor() {
         mealViewForm.clearIngredientsList();
         mealViewForm.setMeal(null);
         mealViewForm.setVisible(false);
     }
+
+   private void closeUserEditor(){
+        userViewForm.setUser(null);
+        userViewForm.setVisible(false);
+   }
 
     private void closeBeerEditor() {
         beerViewForm.volumeAccordionClearVolume();
@@ -216,6 +286,10 @@ public class MainView extends VerticalLayout {
 
     public void setMealDtoGridValues(List<MealDto> list) {
          mealDtoGrid.setItems(list);
+    }
+
+    public void setUserDtoGridValues(List<UserDto> list){
+        usersDtoGrid.setItems(list);
     }
 
     public void setBeerDtoGridValues(List<BeerDto> list) {
