@@ -74,5 +74,9 @@ public class Config {
     @Value("${beersandmeals.api.clear_meal_db}")
     private String clearMealDb;
 
+    @Value("${beersandmeals.api.delete_single_beer_from_db}")
+    public String deleteSingleBeerFromDb;
 
+    @Value("${beersandmeals.api.delete_single_meal_from_db}")
+    public String deleteSingleMealFromDb;
 }

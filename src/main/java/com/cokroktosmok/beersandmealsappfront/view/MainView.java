@@ -46,6 +46,8 @@ public class MainView extends VerticalLayout {
 
    private boolean isAdmin;
 
+   DialogWindow dialogForButtonActions;
+
     @Autowired
     public MainView(BackEndDataManipulatorService backEndDataManipulatorService) {
         //If I try to get SecurityContextHolder without It being wrapped in function, the content is null (have no idea why)
@@ -90,8 +92,21 @@ public class MainView extends VerticalLayout {
         Button defaultList = new Button("beers and meals lists",e-> setLayoutToBeersAndMeals());
         if (isAdmin){
             Button admin = new Button("users panel" ,e->setLayoutToUsers());
-            Button updateDb = new Button("update local recipes db" ,e->updateRecipesDb());
-            Button clearDb = new Button("remove all recipes from db" ,e->clearRecipesDb());
+            Button updateDb = new Button("update local recipes db" ,e->
+            {
+                List<String> response= updateRecipesDb();
+                dialogForButtonActions=new DialogWindow("updating local recipes db from api",response.get(0),response.get(1));
+                dialogForButtonActions.getDialog().open();
+
+            });
+
+
+            Button clearDb = new Button("remove all recipes from db" ,e->
+            {
+                List<String> response= clearRecipesDb();
+                dialogForButtonActions=new DialogWindow("removing all recipes from local db",response.get(0),response.get(1));
+                dialogForButtonActions.getDialog().open();
+            });
             return new HorizontalLayout(logout,defaultList,favorites,admin,updateDb,clearDb);
         }
         return new HorizontalLayout(logout,defaultList,favorites);
@@ -199,14 +214,16 @@ public class MainView extends VerticalLayout {
         return backEndDataManipulatorService.findAllUsers(null);
     }
 
-    public void clearRecipesDb(){
-        backEndDataManipulatorService.clearRecipesDb();
+    public List<String>  clearRecipesDb(){
+      List<String> responseMsgs= backEndDataManipulatorService.clearRecipesDb();
         setLayoutToBeersAndMeals();
+        return responseMsgs;
     }
 
-    public void updateRecipesDb(){
-        backEndDataManipulatorService.updateRecipesDb();
+    public List<String> updateRecipesDb(){
+        List<String> responseMsgs= backEndDataManipulatorService.updateRecipesDb();
         setLayoutToBeersAndMeals();
+        return responseMsgs;
     }
 
 
@@ -253,12 +270,12 @@ public class MainView extends VerticalLayout {
         }
     }
 
-    private void updateBeerList() {
+    public void updateBeerList() {
         beerDtoGrid.setItems(backEndDataManipulatorService.findAllBeers(filterBeerText.getValue()));
     }
 
 
-    private void updateMealList() {
+    public void updateMealList() {
         mealDtoGrid.setItems(backEndDataManipulatorService.findAllMeals(filterMealText.getValue()));
     }
 
