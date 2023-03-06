@@ -68,21 +68,21 @@ public class BackEndDataManipulatorService {
             return beerDtoList.stream().filter(e -> e.getName().toLowerCase().contains(stringFilter.toLowerCase())).collect(Collectors.toList());
         }
     }
-    //do naprawy
-    public void addMealToFavorites(String mealName) {
-        backendCommunicationClient.addToFavoriteMealDtoList(mealName);
+
+    public String addMealToFavorites(String mealName) {
+      return   backendCommunicationClient.addToFavoriteMealDtoList(mealName);
     }
 
-    public void addBeerToFavorites(String beerName) {
-        backendCommunicationClient.addToFavoriteBeerDtoList(beerName);
+    public String addBeerToFavorites(String beerName) {
+       return backendCommunicationClient.addToFavoriteBeerDtoList(beerName);
     }
 
-    public void removeMealFromFavorites(String mealName) {
-        backendCommunicationClient.removeFromFavoriteMealDtoList(mealName);
+    public String removeMealFromFavorites(String mealName) {
+       return backendCommunicationClient.removeFromFavoriteMealDtoList(mealName);
     }
 
-    public void removeBeerFromFavorites(String beerName) {
-        backendCommunicationClient.removeFromFavoriteBeerDtoList(beerName);
+    public String removeBeerFromFavorites(String beerName) {
+      return   backendCommunicationClient.removeFromFavoriteBeerDtoList(beerName);
     }
 
     public List<UserDto> findAllUsers(String stringFilter){
@@ -94,12 +94,18 @@ public class BackEndDataManipulatorService {
         }
     }
 
-    public void setUserRole(String login, String role){
-        String response=backendCommunicationClient.changeUserRole(login,role);
+    public String setUserRole(String login, String role){
+        return backendCommunicationClient.changeUserRole(login,role);
     }
 
-    public void setUserStatus(String login, Integer status){
-        String response=backendCommunicationClient.changeUserStatus(login,status);
+    public String setUserStatus(String login, Integer status){
+        return backendCommunicationClient.changeUserStatus(login,status);
     }
 
+    public String deleteSingleBeerFromDb(String name) {
+        return backendCommunicationClient.deleteSingleBeerFromDb(name);
+    }
+    public String deleteSingleMealFromDb(String name) {
+        return backendCommunicationClient.deleteSingleMealFromDb(name);
+    }
 }

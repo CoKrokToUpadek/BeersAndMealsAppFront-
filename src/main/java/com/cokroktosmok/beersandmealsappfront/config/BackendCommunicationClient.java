@@ -191,6 +191,39 @@ public class BackendCommunicationClient {
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.PUT, entity, String.class);
         return response.getBody();
     }
+    public String deleteSingleBeerFromDb(String name) {
+        URI url = buildUriForDeletingSingleBeerFromDb(name);
+        HttpEntity<String> entity = headers();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
+        return response.getBody();
+    }
+
+    public String deleteSingleMealFromDb(String name) {
+        URI url = buildUriForDeletingSingleMealFromDb(name);
+        HttpEntity<String> entity = headers();
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.DELETE, entity, String.class);
+        return response.getBody();
+    }
+
+    private URI buildUriForDeletingSingleBeerFromDb(String name) {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getDeleteSingleBeerFromDb())
+                .queryParam("beerName",name)
+                .build()
+                .encode()
+                .toUri();
+    }
+
+    private URI buildUriForDeletingSingleMealFromDb(String name) {
+        return UriComponentsBuilder.fromHttpUrl(beerConfig.getBeerAppBasicEndpoint())
+                .pathSegment(beerConfig.getAdminFunctionalities())
+                .pathSegment(beerConfig.getDeleteSingleMealFromDb())
+                .queryParam("mealName",name)
+                .build()
+                .encode()
+                .toUri();
+    }
 
 
     private URI buildUriForChangingUserStatus(String login,Integer status) {
@@ -214,7 +247,6 @@ public class BackendCommunicationClient {
                 .encode()
                 .toUri();
     }
-
 
 
     private URI buildUriForAllBeers() {

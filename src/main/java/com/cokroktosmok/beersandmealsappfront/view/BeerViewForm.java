@@ -7,6 +7,7 @@ import com.cokroktosmok.beersandmealsappfront.static_recources.GraphicAssets;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.accordion.Accordion;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Image;
@@ -17,6 +18,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -68,6 +70,8 @@ public class BeerViewForm extends FormLayout {
     Binder<BeerDto> binder = new BeanValidationBinder<>(BeerDto.class);
 
     BackEndDataManipulatorService backEndDataManipulatorService;
+
+    DialogWindow dialogForButtonActions;
     boolean isAdmin;
     public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService,MainView parent,boolean isAdmin) {
         this.isAdmin=isAdmin;
@@ -83,20 +87,30 @@ public class BeerViewForm extends FormLayout {
     }
     private void setButtonForRemovingRecipeFromDb(){
         deleteButton.setText("delete recipe from Db");
+        deleteButton.addClickListener(e->{
+            String msg=backEndDataManipulatorService.deleteSingleBeerFromDb(beerDto.getName());
+            parentView.updateBeerList();
+            dialogForButtonActions=new DialogWindow("Removing recipe from db",msg);
+            dialogForButtonActions.getDialog().open();
+        });
     }
 
     public void setButtonForAddingToFavorites(){
         favoritesButton.setText("add to favorites");
         favoritesButton.addClickListener(e-> {
-            backEndDataManipulatorService.addBeerToFavorites(beerDto.getName());
+            String msg=backEndDataManipulatorService.addBeerToFavorites(beerDto.getName());
+            dialogForButtonActions=new DialogWindow("adding favorites",msg);
+            dialogForButtonActions.getDialog().open();
         });
     }
 
     public void setButtonForRemovingFromFavorites(){
         favoritesButton.setText("remove from favorites");
         favoritesButton.addClickListener(e->{
-            backEndDataManipulatorService.removeBeerFromFavorites(beerDto.getName());
+            String msg= backEndDataManipulatorService.removeBeerFromFavorites(beerDto.getName());
             parentView.setBeerDtoGridValues(parentView.updateCurrentFavoriteBeerList());
+            dialogForButtonActions=new DialogWindow("removing from favorites",msg);
+            dialogForButtonActions.getDialog().open();
         });
 
     }

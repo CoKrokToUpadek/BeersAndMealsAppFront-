@@ -7,7 +7,6 @@ import com.vaadin.flow.server.StreamResource;
 
 
 public class GraphicAssets {
-
     StreamResource imageResource = new StreamResource("logo.png",
             () -> GraphicAssets.class.getResourceAsStream("/logo.png"));
     private Image logo=new Image(imageResource,"error");

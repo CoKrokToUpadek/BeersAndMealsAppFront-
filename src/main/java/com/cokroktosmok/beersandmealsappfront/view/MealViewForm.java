@@ -46,6 +46,8 @@ public class MealViewForm extends FormLayout {
 
     Button deleteButton=new Button();
 
+    DialogWindow dialogForButtonActions;
+
     boolean isAdmin;
     public MealViewForm(BackEndDataManipulatorService backEndDataManipulatorService, MainView parent,boolean isAdmin) {
         this.isAdmin=isAdmin;
@@ -61,20 +63,30 @@ public class MealViewForm extends FormLayout {
     }
     private void setButtonForRemovingRecipeFromDb(){
         deleteButton.setText("delete recipe from Db");
+        deleteButton.addClickListener(e->{
+            String msg= backEndDataManipulatorService.deleteSingleMealFromDb(mealDto.getName());
+            parentView.updateMealList();
+            dialogForButtonActions=new DialogWindow("removing meal recipe from db",msg);
+            dialogForButtonActions.getDialog().open();
+        });
     }
 
     public void setButtonForAddingToFavorites() {
         favoritesButton.setText("add to favorites");
         favoritesButton.addClickListener(e -> {
-            backEndDataManipulatorService.addMealToFavorites(mealDto.getName());
+            String msg=   backEndDataManipulatorService.addMealToFavorites(mealDto.getName());
+            dialogForButtonActions=new DialogWindow("adding meal to favorites",msg);
+            dialogForButtonActions.getDialog().open();
         });
     }
 
     public void setButtonForRemovingFromFavorites() {
         favoritesButton.setText("remove from favorites");
         favoritesButton.addClickListener(e -> {
-            backEndDataManipulatorService.removeMealFromFavorites(mealDto.getName());
+            String msg=  backEndDataManipulatorService.removeMealFromFavorites(mealDto.getName());
             parentView.setMealDtoGridValues(parentView.updateCurrentFavoriteMealList());
+            dialogForButtonActions=new DialogWindow("removing meal from favorites",msg);
+            dialogForButtonActions.getDialog().open();
         });
     }
 

@@ -1,7 +1,6 @@
 package com.cokroktosmok.beersandmealsappfront.view;
 
 
-import com.cokroktosmok.beersandmealsappfront.data.dto.meal.MealDto;
 import com.cokroktosmok.beersandmealsappfront.data.dto.user.UserDto;
 import com.cokroktosmok.beersandmealsappfront.service.BackEndDataManipulatorService;
 import com.vaadin.flow.component.Key;
@@ -44,6 +43,8 @@ public class UserViewForm extends FormLayout {
     Binder<UserDto> binder = new BeanValidationBinder<>(UserDto.class);
     BackEndDataManipulatorService backEndDataManipulatorService;
 
+    DialogWindow dialogForButtonActions;
+
     public UserViewForm(BackEndDataManipulatorService backEndDataManipulatorService,MainView parentView) {
         this.parentView = parentView;
         this.backEndDataManipulatorService = backEndDataManipulatorService;
@@ -71,17 +72,23 @@ public class UserViewForm extends FormLayout {
         HorizontalLayout layout=new HorizontalLayout();
         closeButton.addClickListener(e -> setVisible(false));
         closeButton.addClickShortcut(Key.ESCAPE);
-        applyChanges.addClickListener(e->modifyUserValues());
+        applyChanges.addClickListener(e->
+                {
+                    List <String>msgList=modifyUserValues();
+                    dialogForButtonActions=new DialogWindow("status of user modification",msgList.get(0), msgList.get(1));
+                    dialogForButtonActions.getDialog().open();
+                });
         applyChanges.addClickShortcut(Key.ENTER);
         layout.add(applyChanges);
         layout.add(closeButton);
         return layout;
     }
 
-    private void modifyUserValues() {
-            backEndDataManipulatorService.setUserRole(login.getValue(),rolesComboBox.getValue());
-            backEndDataManipulatorService.setUserStatus(login.getValue(),statusComboBox.getValue().ordinal());
-            parentView.setUserDtoGridValues(parentView.updateUsersList());
+    private List<String> modifyUserValues() {
+         String roleMsg = backEndDataManipulatorService.setUserRole(login.getValue(),rolesComboBox.getValue());
+         String statusMsg= backEndDataManipulatorService.setUserStatus(login.getValue(),statusComboBox.getValue().ordinal());
+         parentView.setUserDtoGridValues(parentView.updateUsersList());
+         return List.of(roleMsg,statusMsg);
     }
 
     private void textFieldLock(boolean lockValue) {

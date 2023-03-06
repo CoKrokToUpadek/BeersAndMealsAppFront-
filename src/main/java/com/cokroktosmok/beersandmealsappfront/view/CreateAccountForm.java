@@ -63,14 +63,13 @@ public class CreateAccountForm extends VerticalLayout {
 
     ResponseEntity<String> stringResponseEntity;
 
-    GraphicAssets graphicAssets;
+    GraphicAssets graphicAssets=new GraphicAssets();
 
 
     @Autowired
-    public CreateAccountForm(BackendCommunicationClient backendCommunicationClient, CreatedUserDto createdUserDto, GraphicAssets graphicAssets) {
+    public CreateAccountForm(BackendCommunicationClient backendCommunicationClient, CreatedUserDto createdUserDto) {
         this.setClassName("create-account-form");
         this.createdUserDto = createdUserDto;
-        this.graphicAssets=graphicAssets;
         binder.setBean(createdUserDto);
         this.backendCommunicationClient = backendCommunicationClient;
         createdUserBinderConfig();
