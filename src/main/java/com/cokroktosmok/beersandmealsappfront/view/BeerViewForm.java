@@ -17,6 +17,7 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.shared.Registration;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -73,6 +74,9 @@ public class BeerViewForm extends FormLayout {
 
     DialogWindow dialogForButtonActions;
     boolean isAdmin;
+
+    //this convoluted way to manipulate eventClickListeners, but it works only this way
+    Registration registration;
     public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService,MainView parent,boolean isAdmin) {
         this.isAdmin=isAdmin;
         this.parentView=parent;
@@ -96,8 +100,11 @@ public class BeerViewForm extends FormLayout {
     }
 
     public void setButtonForAddingToFavorites(){
+        if (registration!=null){
+            registration.remove();
+        }
         favoritesButton.setText("add to favorites");
-        favoritesButton.addClickListener(e-> {
+        registration =      favoritesButton.addClickListener(e-> {
             String msg=backEndDataManipulatorService.addBeerToFavorites(beerDto.getName());
             dialogForButtonActions=new DialogWindow("adding favorites",msg);
             dialogForButtonActions.getDialog().open();
@@ -105,8 +112,11 @@ public class BeerViewForm extends FormLayout {
     }
 
     public void setButtonForRemovingFromFavorites(){
+        if (registration!=null){
+            registration.remove();
+        }
         favoritesButton.setText("remove from favorites");
-        favoritesButton.addClickListener(e->{
+        registration =    favoritesButton.addClickListener(e->{
             String msg= backEndDataManipulatorService.removeBeerFromFavorites(beerDto.getName());
             parentView.setBeerDtoGridValues(parentView.updateCurrentFavoriteBeerList());
             dialogForButtonActions=new DialogWindow("removing from favorites",msg);

@@ -15,6 +15,8 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.dom.DomListenerRegistration;
+import com.vaadin.flow.shared.Registration;
 
 
 import java.util.ArrayList;
@@ -47,6 +49,8 @@ public class MealViewForm extends FormLayout {
     Button deleteButton=new Button();
 
     DialogWindow dialogForButtonActions;
+    //this convoluted way to manipulate eventClickListeners, but it works only this way
+    Registration registration;
 
     boolean isAdmin;
     public MealViewForm(BackEndDataManipulatorService backEndDataManipulatorService, MainView parent,boolean isAdmin) {
@@ -72,8 +76,11 @@ public class MealViewForm extends FormLayout {
     }
 
     public void setButtonForAddingToFavorites() {
+        if (registration!=null){
+            registration.remove();
+        }
         favoritesButton.setText("add to favorites");
-        favoritesButton.addClickListener(e -> {
+        registration =    favoritesButton.addClickListener(e -> {
             String msg=   backEndDataManipulatorService.addMealToFavorites(mealDto.getName());
             dialogForButtonActions=new DialogWindow("adding meal to favorites",msg);
             dialogForButtonActions.getDialog().open();
@@ -81,8 +88,11 @@ public class MealViewForm extends FormLayout {
     }
 
     public void setButtonForRemovingFromFavorites() {
+        if (registration!=null){
+            registration.remove();
+        }
         favoritesButton.setText("remove from favorites");
-        favoritesButton.addClickListener(e -> {
+        registration = favoritesButton.addClickListener(e -> {
             String msg=  backEndDataManipulatorService.removeMealFromFavorites(mealDto.getName());
             parentView.setMealDtoGridValues(parentView.updateCurrentFavoriteMealList());
             dialogForButtonActions=new DialogWindow("removing meal from favorites",msg);
