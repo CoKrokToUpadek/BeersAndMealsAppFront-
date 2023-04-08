@@ -51,6 +51,7 @@ public class UserViewForm extends FormLayout {
         binder.bindInstanceFields(this);
         textFieldLock(true);
         populateComboBoxes();
+        this.addClassName("padding-60");
         add(id,firstName,lastName,address,email,login,creationDate,userRole,status,comboBoxesLayout(),buttonsLayout());
     }
 
@@ -105,7 +106,18 @@ public class UserViewForm extends FormLayout {
         rolesComboBox.isReadOnly();
     }
 
-    public void setUser(UserDto user) {
+    public void setUserViewContent(UserDto userDto){
+        setUser(userDto);
+        setVisible(true);
+    }
+
+    public void clearUserViewContent(){
+       setUser(null);
+        setVisible(false);
+    }
+
+
+    private void setUser(UserDto user) {
         this.userDto = user;
         binder.readBean(user);
     }

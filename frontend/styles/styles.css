@@ -1,4 +1,35 @@
 .create-account-form {
-    background-color: #F0EAE9;
+    background-color: #1C1C1C;
 }
 
+.padding-16{
+    padding: 16px;
+}
+
+.image-formatter{
+    display:flex;
+    justify-content: center;
+}
+
+.padding-60{
+    padding-top: 60px;
+}
+
+.textfield-config{
+    border:none;
+    color: white;
+}
+
+.main-config{
+    /*TODO poprawic*/
+    background-color:  #1C1C1C;
+    color: #000000;
+}
+
+.login-config{
+    text-align: center;
+    font-family: Serif, serif;
+    font-size: 40px;
+    font-weight: bold;
+    color: #DFD9D4;
+}

@@ -53,17 +53,8 @@ public class BackendCommunicationClient {
         return entity;
     }
 
-//    private HttpEntity<String> headersForPost(String argument) {
-//        String holder = SecurityContextHolder.getContext().getAuthentication().getName();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        headers.setBearerAuth(TokenStorage.getToken(holder));
-//        HttpEntity<String> entity = new HttpEntity<>(argument,headers);
-//        return entity;
-//    }
 
     public ResponseEntity<Boolean> checkIfLoginIsTaken(String login) {
-   //     URI url = buildUriForCheckIfLoginIsTaken(login);
         URI url =  universalUriBuilder(beerConfig.getUserFunctionalities(),beerConfig.getIsLoginTaken(),new ParamSetClass("login", login));
         try {
             return restTemplate.getForEntity(url, Boolean.class);

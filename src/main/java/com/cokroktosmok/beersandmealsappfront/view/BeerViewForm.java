@@ -29,100 +29,111 @@ public class BeerViewForm extends FormLayout {
 
     private MainView parentView;
     private final int embeddedHeight = 400;
-    private final int embeddedWidth = 200;
+    private final int embeddedWidth = 100;
     private final GraphicAssets graphicAssets = new GraphicAssets();
     private BeerDto beerDto;
-    TextField name = new TextField("name");
-    TextArea description = new TextArea("description");
-    Image imageUrl;
-    TextField abv = new TextField("abv");
-    TextField ibu = new TextField("ibu");
-    TextField target_og = new TextField("target_og");
-    TextField ebc = new TextField("ebc");
-    TextField srm = new TextField("srm");
-    TextField attenuationLevel = new TextField("attenuationLevel");
+    private final TextField name = new TextField("name");
+    private final TextArea description = new TextArea("description");
+    private  Image imageUrl;
+    private final TextField abv = new TextField("abv");
+    private final TextField ibu = new TextField("ibu");
+    private final TextField target_og = new TextField("target_og");
+    private final TextField ebc = new TextField("ebc");
+    private final TextField srm = new TextField("srm");
+    private final TextField attenuationLevel = new TextField("attenuationLevel");
 
-    Accordion volume = new Accordion();
+    private final Accordion volume = new Accordion();
 
-    Accordion boilVolume = new Accordion();
+    private final Accordion boilVolume = new Accordion();
 
-    TextArea brewers_tips = new TextArea("brewers_tips");
-    TextField contributed_by = new TextField("contributed_by");
-    Button favoritesButton = new Button("favorites");//placeholder
-    Button closeButton = new Button("close");
+    private final TextArea brewers_tips = new TextArea("brewers_tips");
+    private final TextField contributed_by = new TextField("contributed_by");
+    private final Button favoritesButton = new Button("favorites");//placeholder
+    private final Button closeButton = new Button("close");
 
-    Span maltName=new Span("Malts list");
+    private  Span maltName = new Span("Malts list");
 
-    Span hopsName=new Span("Hops list");
+    private Span hopsName = new Span("Hops list");
 
-    TextField yeast=new TextField("Yeast");
+    private final TextField yeast = new TextField("Yeast");
 
-    Button deleteButton=new Button();
+    private final Button deleteButton = new Button();
 
-    HorizontalLayout volumeHorizontalLayout = new HorizontalLayout();
+    private final HorizontalLayout volumeHorizontalLayout = new HorizontalLayout();
 
-    HorizontalLayout boilVolumeHorizontalLayout = new HorizontalLayout();
+    private final HorizontalLayout boilVolumeHorizontalLayout = new HorizontalLayout();
 
     private final Grid<MaltsForInterfaceDto> maltsGrid = new Grid<>(MaltsForInterfaceDto.class);
 
     private final Grid<HopsForInterfaceDto> hopsGrid = new Grid<>(HopsForInterfaceDto.class);
 
-    private Grid<String> foodPairingsGrid=new Grid<>();
-    Binder<BeerDto> binder = new BeanValidationBinder<>(BeerDto.class);
+    private final Grid<String> foodPairingsGrid = new Grid<>();
+    private final Binder<BeerDto> binder = new BeanValidationBinder<>(BeerDto.class);
 
-    BackEndDataManipulatorService backEndDataManipulatorService;
+    private final BackEndDataManipulatorService backEndDataManipulatorService;
 
-    DialogWindow dialogForButtonActions;
-    boolean isAdmin;
+    private DialogWindow dialogForButtonActions;
+    private final boolean isAdmin;
 
     //this convoluted way to manipulate eventClickListeners, but it works only this way
     Registration registration;
-    public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService,MainView parent,boolean isAdmin) {
-        this.isAdmin=isAdmin;
-        this.parentView=parent;
-        this.backEndDataManipulatorService=backEndDataManipulatorService;
+
+    public BeerViewForm(BackEndDataManipulatorService backEndDataManipulatorService, MainView parent, boolean isAdmin) {
+        this.isAdmin = isAdmin;
+        this.parentView = parent;
+        this.backEndDataManipulatorService = backEndDataManipulatorService;
         yeast.setValue("placeholder");
         brewers_tips.setMaxLength(2000);
         binder.bindInstanceFields(this);
-        imageUrl = graphicAssets.imageConfig("ph", embeddedHeight, embeddedWidth);
+        imageUrl = graphicAssets.imageConfig("ph", embeddedWidth, embeddedHeight);
+        HorizontalLayout imageContainer=new HorizontalLayout();
+        imageContainer.add(imageUrl);
+        imageContainer.addClassName("image-formatter");
+        imageContainer.addClassName("padding-60");
         textFieldLock(true);
-        add(imageUrl,name, description, abv, ibu, target_og, ebc, srm, attenuationLevel, volume, boilVolume,maltName, getMaltsGrid(),
-                hopsName, getHopsGrid(),getFoodPairingsGrid(),yeast,contributed_by, createButtonsLayout());
+        hopsName.addClassName("textfield-config");
+        maltName.addClassName("textfield-config");
+        add(imageContainer, name, description, abv, ibu, target_og, ebc, srm, attenuationLevel, volume, boilVolume, maltName, getMaltsGrid(),
+                hopsName, getHopsGrid(), getFoodPairingsGrid(), yeast, contributed_by, createButtonsLayout());
     }
-    private void setButtonForRemovingRecipeFromDb(){
+
+    private void setButtonForRemovingRecipeFromDb() {
         deleteButton.setText("delete recipe from Db");
-        deleteButton.addClickListener(e->{
-            String msg=backEndDataManipulatorService.deleteSingleBeerFromDb(beerDto.getName());
+        deleteButton.addClickListener(e -> {
+            String msg = backEndDataManipulatorService.deleteSingleBeerFromDb(beerDto.getName());
             parentView.updateBeerList();
-            dialogForButtonActions=new DialogWindow("Removing recipe from db",msg);
+            dialogForButtonActions = new DialogWindow("Removing recipe from db", msg);
             dialogForButtonActions.getDialog().open();
         });
     }
 
-    public void setButtonForAddingToFavorites(){
-        if (registration!=null){
+    public void setButtonForAddingToFavorites() {
+        if (registration != null) {
             registration.remove();
         }
         favoritesButton.setText("add to favorites");
-        registration =      favoritesButton.addClickListener(e-> {
-            String msg=backEndDataManipulatorService.addBeerToFavorites(beerDto.getName());
-            dialogForButtonActions=new DialogWindow("adding favorites",msg);
-            dialogForButtonActions.getDialog().open();
-        });
+        registration = favoritesButton.addClickListener(e -> eventListenerForAddingToFavorites());
     }
 
-    public void setButtonForRemovingFromFavorites(){
-        if (registration!=null){
+    public void setButtonForRemovingFromFavorites() {
+        if (registration != null) {
             registration.remove();
         }
         favoritesButton.setText("remove from favorites");
-        registration =    favoritesButton.addClickListener(e->{
-            String msg= backEndDataManipulatorService.removeBeerFromFavorites(beerDto.getName());
-            parentView.setBeerDtoGridValues(parentView.updateCurrentFavoriteBeerList());
-            dialogForButtonActions=new DialogWindow("removing from favorites",msg);
-            dialogForButtonActions.getDialog().open();
-        });
+        registration = favoritesButton.addClickListener(e -> eventListenerForRemovingFromFavorites());
+    }
 
+    private void eventListenerForAddingToFavorites(){
+        String msg = backEndDataManipulatorService.addBeerToFavorites(beerDto.getName());
+        dialogForButtonActions = new DialogWindow("adding favorites", msg);
+        dialogForButtonActions.getDialog().open();
+    }
+
+    private void eventListenerForRemovingFromFavorites(){
+        String msg = backEndDataManipulatorService.removeBeerFromFavorites(beerDto.getName());
+        parentView.setBeerDtoGridValues(parentView.updateCurrentFavoriteBeerList());
+        dialogForButtonActions = new DialogWindow("removing from favorites", msg);
+        dialogForButtonActions.getDialog().open();
     }
 
 
@@ -140,64 +151,84 @@ public class BeerViewForm extends FormLayout {
         yeast.setReadOnly(lockValue);
     }
 
-    public Grid<String> getFoodPairingsGrid() {
+    private Grid<String> getFoodPairingsGrid() {
         return foodPairingsGrid;
     }
 
     public void setFoodPairingsGrid() {
         foodPairingsGrid.removeAllColumns();
         foodPairingsGrid.setItems(beerDto.getFoodPairing());
-        foodPairingsGrid.addColumn(e->e).setHeader("Food Pairings");
+        foodPairingsGrid.addColumn(e -> e).setHeader("Food Pairings");
     }
 
-    public Grid<MaltsForInterfaceDto> getMaltsGrid() {
+    private Grid<MaltsForInterfaceDto> getMaltsGrid() {
         return maltsGrid;
     }
 
-    public Grid<HopsForInterfaceDto> getHopsGrid() {
+    private Grid<HopsForInterfaceDto> getHopsGrid() {
         return hopsGrid;
     }
 
-    public void setMaltsGrid(){
+    public void setBeerViewContent(BeerDto beerDto){
+        setBeer(beerDto);
+        volumeAccordionSetVolume();
+        boilVolumeAccordionSetVolume();
+        setHopsGrid();
+        setMaltsGrid();
+        setFoodPairingsGrid();
+        setVisible(true);
+    }
+
+    public void clearBeerViewContent(){
+        volumeAccordionClearVolume();
+        boilVolumeAccordionClearVolume();
+        setBeer(null);
+        setVisible(false);
+    }
+
+
+    private void setMaltsGrid() {
         maltsGrid.setItems(beerDto.getIngredientsDto().getMaltDtoList().stream()
                 .map(tempMalts -> new MaltsForInterfaceDto(tempMalts.getName(), tempMalts.getAmountDto().getValue(),
                         tempMalts.getAmountDto().getUnit()))
                 .collect(Collectors.toList()));
     }
 
-    public void setHopsGrid(){
+    private void setHopsGrid() {
         hopsGrid.setItems(beerDto.getIngredientsDto().getHopsDtoList().stream()
                 .map(tempHops -> new HopsForInterfaceDto(tempHops.getName(), tempHops.getAmountDto().getValue(),
                         tempHops.getAmountDto().getUnit(), tempHops.getAdd(), tempHops.getAttribute()))
                 .collect(Collectors.toList()));
     }
 
-    public void volumeAccordionSetVolume() {
+    private void volumeAccordionSetVolume() {
         volumeAccordionClearVolume();
         Span volumeData = new Span("" + beerDto.getVolumeDto().getValue() + " " + beerDto.getVolumeDto().getUnit());
+        volumeData.addClassName("textfield-config");
         volumeHorizontalLayout.add(volumeData);
         volumeHorizontalLayout.setSpacing(false);
         volumeHorizontalLayout.setPadding(false);
         volume.add("volume information", volumeHorizontalLayout);
     }
 
-    public void volumeAccordionClearVolume() {
+    private void volumeAccordionClearVolume() {
         if (volume.getChildren().findAny().isPresent()) {
             volume.remove(volumeHorizontalLayout);
             volumeHorizontalLayout.removeAll();
         }
     }
 
-    public void boilVolumeAccordionSetVolume() {
+    private void boilVolumeAccordionSetVolume() {
         boilVolumeAccordionClearVolume();
         Span volumeData = new Span("" + beerDto.getBoilVolumeDto().getValue() + " " + beerDto.getBoilVolumeDto().getUnit());
+        volumeData.addClassName("textfield-config");
         boilVolumeHorizontalLayout.add(volumeData);
         boilVolumeHorizontalLayout.setSpacing(false);
         boilVolumeHorizontalLayout.setPadding(false);
         boilVolume.add("boil volume information", boilVolumeHorizontalLayout);
     }
 
-    public void boilVolumeAccordionClearVolume() {
+    private void boilVolumeAccordionClearVolume() {
         if (boilVolume.getChildren().findAny().isPresent()) {
             boilVolume.remove(boilVolumeHorizontalLayout);
             boilVolumeHorizontalLayout.removeAll();
@@ -210,9 +241,9 @@ public class BeerViewForm extends FormLayout {
         favoritesButton.addClickShortcut(Key.ENTER);
         closeButton.addClickListener(e -> setVisible(false));
         closeButton.addClickShortcut(Key.ESCAPE);
-        if (isAdmin){
+        if (isAdmin) {
             setButtonForRemovingRecipeFromDb();
-            return new HorizontalLayout(favoritesButton, closeButton,deleteButton);
+            return new HorizontalLayout(favoritesButton, closeButton, deleteButton);
         }
         return new HorizontalLayout(favoritesButton, closeButton);
     }
@@ -228,29 +259,3 @@ public class BeerViewForm extends FormLayout {
         binder.readBean(beer);
     }
 }
-    // Events
-//    public static abstract class MealFormEvent extends ComponentEvent<BeerViewForm> {
-//        private BeerDto beerDto;
-//
-//        protected MealFormEvent(BeerViewForm source, BeerDto contact) {
-//            super(source, false);
-//            this.beerDto = contact;
-//        }
-//
-//        public BeerDto getBeerDto() {
-//            return beerDto;
-//        }
-//    }
-//
-////
-////    public static class CloseEvent extends MealFormEvent {
-////        CloseEvent(MealViewForm source) {
-////            super(source, null);
-////        }
-////    }
-////
-////    public <T extends ComponentEvent<?>> Registration addListener(Class<T> eventType,
-////                                                                  ComponentEventListener<T> listener) {
-////        return getEventBus().addListener(eventType, listener);
-////    }
-//}

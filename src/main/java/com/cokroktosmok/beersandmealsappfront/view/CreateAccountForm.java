@@ -22,6 +22,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.flow.theme.lumo.Lumo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -68,6 +69,7 @@ public class CreateAccountForm extends VerticalLayout {
 
     @Autowired
     public CreateAccountForm(BackendCommunicationClient backendCommunicationClient, CreatedUserDto createdUserDto) {
+        UI.getCurrent().getPage().executeJs("document.documentElement.setAttribute('theme', '"+ Lumo.DARK+"')");
         this.setClassName("create-account-form");
         this.createdUserDto = createdUserDto;
         binder.setBean(createdUserDto);

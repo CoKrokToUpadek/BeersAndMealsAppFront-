@@ -15,7 +15,6 @@ import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
-import com.vaadin.flow.dom.DomListenerRegistration;
 import com.vaadin.flow.shared.Registration;
 
 
@@ -26,6 +25,7 @@ public class MealViewForm extends FormLayout {
     MainView parentView;
     private MealDto mealDto;
     private final GraphicAssets graphicAssets = new GraphicAssets();
+    //placeholder video for when there is no video related to record in db
     private final String phVideo = "https://www.youtube.com/watch?v=NpEaa2P7qZI";
     Image thumbnail;
     //placeholder so that vaadin won't ignore this field
@@ -63,7 +63,11 @@ public class MealViewForm extends FormLayout {
         //placeholders so that vaadin won't ignore this fields
         thumbnail = graphicAssets.imageConfig("ph", embeddedWidth, embeddedHeight);
         embeddedPlayerConfig(phVideo, embeddedWidth, embeddedHeight);
-        add(thumbnail, name, category, area, instruction, tags, getIngredientAndMeasureDtoGrid(), embeddedPlayer, source, createButtonsLayout());
+        HorizontalLayout imageContainer=new HorizontalLayout();
+        imageContainer.add(thumbnail);
+        imageContainer.addClassName("image-formatter");
+        imageContainer.addClassName("padding-60");
+        add(imageContainer, name, category, area, instruction, tags, getIngredientAndMeasureDtoGrid(), embeddedPlayer, source, createButtonsLayout());
     }
     private void setButtonForRemovingRecipeFromDb(){
         deleteButton.setText("delete recipe from Db");
@@ -80,11 +84,7 @@ public class MealViewForm extends FormLayout {
             registration.remove();
         }
         favoritesButton.setText("add to favorites");
-        registration =    favoritesButton.addClickListener(e -> {
-            String msg=   backEndDataManipulatorService.addMealToFavorites(mealDto.getName());
-            dialogForButtonActions=new DialogWindow("adding meal to favorites",msg);
-            dialogForButtonActions.getDialog().open();
-        });
+        registration =    favoritesButton.addClickListener(e -> eventListenerForAddingToFavorites());
     }
 
     public void setButtonForRemovingFromFavorites() {
@@ -92,12 +92,20 @@ public class MealViewForm extends FormLayout {
             registration.remove();
         }
         favoritesButton.setText("remove from favorites");
-        registration = favoritesButton.addClickListener(e -> {
-            String msg=  backEndDataManipulatorService.removeMealFromFavorites(mealDto.getName());
-            parentView.setMealDtoGridValues(parentView.updateCurrentFavoriteMealList());
-            dialogForButtonActions=new DialogWindow("removing meal from favorites",msg);
-            dialogForButtonActions.getDialog().open();
-        });
+        registration = favoritesButton.addClickListener(e -> eventListenerForRemovingFromFavorites());
+    }
+
+    private void eventListenerForAddingToFavorites(){
+        String msg=   backEndDataManipulatorService.addMealToFavorites(mealDto.getName());
+        dialogForButtonActions=new DialogWindow("adding meal to favorites",msg);
+        dialogForButtonActions.getDialog().open();
+    }
+
+    private void eventListenerForRemovingFromFavorites(){
+        String msg=  backEndDataManipulatorService.removeMealFromFavorites(mealDto.getName());
+        parentView.setMealDtoGridValues(parentView.updateCurrentFavoriteMealList());
+        dialogForButtonActions=new DialogWindow("removing meal from favorites",msg);
+        dialogForButtonActions.getDialog().open();
     }
 
     private void textFieldLock(boolean lockValue) {
@@ -139,7 +147,19 @@ public class MealViewForm extends FormLayout {
         return ingredientAndMeasureDtoGrid;
     }
 
-    public void setMeal(MealDto meal) {
+    public void setMealViewContent(MealDto mealDto){
+        setMeal(mealDto);
+        setIngredientsList();
+        setVisible(true);
+    }
+
+    public void clearMealViewContent(){
+        clearIngredientsList();
+        setMeal(null);
+        setVisible(false);
+    }
+
+    private void setMeal(MealDto meal) {
         this.mealDto = meal;
         if (meal != null) {
             if (meal.getThumbnail() != null) {
@@ -152,11 +172,11 @@ public class MealViewForm extends FormLayout {
         binder.readBean(meal);
     }
 
-    public void setIngredientsList() {
+    private void setIngredientsList() {
         ingredientAndMeasureDtoGrid.setItems(mealDto.getIngredientsAndMeasureDtoList());
     }
 
-    public void clearIngredientsList() {
+    private void clearIngredientsList() {
         ingredientAndMeasureDtoGrid.setItems(new ArrayList<>());
     }
 }
