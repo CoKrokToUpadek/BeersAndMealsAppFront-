@@ -95,7 +95,7 @@ public class CreateAccountForm extends VerticalLayout {
                     if (booleanResponseEntity.getStatusCode() == HttpStatus.OK) {
                         return Boolean.FALSE.equals(booleanResponseEntity.getBody());
                     } else {
-                        dialogConfig("comm error");
+                        dialogConfig(booleanResponseEntity.getStatusCode().toString());
                         return true;
                     }
                 }, "login is already taken")
@@ -134,8 +134,8 @@ public class CreateAccountForm extends VerticalLayout {
             dialog.getFooter().add(verticalLayout);
             dialog.open();
         } else {
-            dialog.setHeaderTitle("Internal Error");
-            dialog.add("something went bad");
+            dialog.setHeaderTitle("Something went bad");
+            dialog.add(e);
             button.addClickListener(r -> {
                 goBack.click();
                 dialog.close();
@@ -161,7 +161,7 @@ public class CreateAccountForm extends VerticalLayout {
             if (stringResponseEntity.getStatusCode() == HttpStatus.OK) {
                 dialogConfig(stringResponseEntity.getBody());
             } else {
-                dialogConfig("comm error");
+                dialogConfig(stringResponseEntity.getStatusCode().toString());
             }
         });
         return new HorizontalLayout(confirm, goBack);
