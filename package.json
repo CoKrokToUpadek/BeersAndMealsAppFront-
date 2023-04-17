@@ -356,9 +356,5 @@
     "lit": "$lit",
     "@polymer/polymer": "$@polymer/polymer",
     "date-fns": "$date-fns"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/CoKrokToUpadek/BeersAndMealsAppFront-.git"
   }
 }

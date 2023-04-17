@@ -6,13 +6,27 @@ plugins {
     id 'org.springframework.boot' version '2.7.8-SNAPSHOT'
     id 'io.spring.dependency-management' version '1.0.15.RELEASE'
     id 'com.vaadin' version '23.3.1'
-    id "com.microsoft.azure.azurewebapp" version "1.2.0"
+    id("com.microsoft.azure.azurewebapp") version "1.7.1"
     id 'war'
 }
 
 group = 'com.cokroktosmok'
 version = '0.0.1-SNAPSHOT'
 
+
+
+azurewebapp {
+    subscription = 'c9b4912b-84f0-4c37-a935-c5bde9a29eee'
+    resourceGroup = 'test'
+    appName = 'BeerAndMealAppTest2'
+    pricingTier = 'F1'
+    region = 'northeurope'
+    runtime {
+        os = 'Linux'
+        webContainer = 'Tomcat 9'
+        javaVersion = 'Java 17'
+    }
+}
 
 configurations {
     compileOnly {
@@ -40,6 +54,8 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     implementation 'org.springframework.boot:spring-boot-starter-security:2.7.5'
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-tomcat
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 
 }
 
