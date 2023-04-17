@@ -37,6 +37,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security:2.7.5'
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-tomcat
     providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
+
 }
 
 
